@@ -17,7 +17,7 @@ public record ElasticProductSearchItem(
         List<ElasticSearchAttribute> attributes,
         Boolean active) {
 
-    record ElasticSearchAttribute(
+    public record ElasticSearchAttribute(
             String title,
             String type,
             List<String> values) {

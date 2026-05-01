@@ -14,7 +14,7 @@ public record ProductSearchItem(
         List<SearchAttribute> attributes,
         Boolean active) {
 
-    record SearchAttribute(
+    public record SearchAttribute(
             String title,
             String type,
             List<String> values) {
