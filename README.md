@@ -168,10 +168,10 @@ java -jar target/product-service.jar
 
 # Environment Variables
 
-| Variable            | Description                | Default        |
-|---------------------|----------------------------|----------------|
-| CONFIG_SERVER_URL   | Config server endpoint     | localhost:8010 |
-| ELASTICSEARCH_URL   | Elasticsearch endpoint     | localhost:9200 |
+| Variable          | Description             | Default        |
+|-------------------|-------------------------|----------------|
+| CONFIG_SERVER_URL | Config server endpoint  | localhost:8010 |
+| APP_PROFILE       | Profile to fetch config | dev, prod      |
 
 ---
 
