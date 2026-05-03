@@ -10,13 +10,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@RestController("/search/products")
+@RestController("/products")
 @RequiredArgsConstructor
 class ProductSearchController {
 
     private final ProductSearchUseCase productSearchUseCase;
 
-    @GetMapping
+    @GetMapping("/search")
     ResponseEntity<List<ProductSearchItem>> search(@RequestParam String q) {
         return ResponseEntity.ok(productSearchUseCase.search(q));
     }
