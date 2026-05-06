@@ -18,9 +18,14 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
     public List<ElasticProductSearchItem> search(String text) {
         NativeQuery query = NativeQuery.builder()
                 .withQuery(q -> q
-                        .match(m -> m
-                                .field("title")
+                        .multiMatch(mm -> mm
                                 .query(text)
+                                .fields(
+                                        "title^3",
+                                        "description",
+                                        "attributes.title",
+                                        "attributes.values"
+                                ).fuzziness("AUTO")
                         )
                 )
                 .build();
