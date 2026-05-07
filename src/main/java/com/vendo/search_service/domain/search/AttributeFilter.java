@@ -2,10 +2,10 @@ package com.vendo.search_service.domain.search;
 
 import java.util.List;
 
-public record AttributeFilter(
+public record AttributeFilter(List<Attribute> attributes) {
 
-        String title,
-        List<String> values
-
-) {
+    public record Attribute(
+            String title,
+            List<String> values
+    ) {}
 }
