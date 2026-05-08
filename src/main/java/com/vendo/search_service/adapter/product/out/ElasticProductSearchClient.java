@@ -22,18 +22,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ElasticProductSearchClient implements SearchRepository<ElasticProductSearchItem> {
 
-    private final ElasticsearchOperations operations;
-
     @Value("${product.search.size}")
     private int DEFAULT_SIZE;
-
     @Value("${product.search.page}")
     private int DEFAULT_PAGE;
 
     private static final String FUZZINESS_MODE = "AUTO";
     private static final String FIELD_PRIORITY = "^3";
-
-    // TODO write utility that returns list(set preferred) of fields by passed class
     private static final String TITLE_FIELD = "title";
     private static final String ACTIVE_FIELD = "active";
     private static final String CATEGORY_ID_FIELD = "categoryId";
@@ -42,6 +37,8 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
     private static final String ATTRIBUTES_FIELD = "attributes";
     private static final String ATTRIBUTES_TITLE_FIELD = ATTRIBUTES_FIELD + ".title";
     private static final String ATTRIBUTES_VALUES_FIELD = ATTRIBUTES_FIELD + ".values";
+
+    private final ElasticsearchOperations operations;
 
     @Override
     public List<ElasticProductSearchItem> search(String q, ProductSearchRequest request) {
@@ -55,6 +52,7 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         withActive(request.active(), queryBuilder);
         withCategoryId(request.categoryId(), queryBuilder);
         withPriceRange(request.minPrice(), request.maxPrice(), queryBuilder);
+        withAttributeFilter(request.attributeFilter(), queryBuilder);
 
         return operations.search(queryBuilder.build(), ElasticProductSearchItem.class).stream().map(this::toSearchItem).toList();
     }
@@ -65,17 +63,7 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
 
     private void withQuery(String q, NativeQueryBuilder builder) {
         if (Optional.ofNullable(q).isPresent()) {
-            builder.withQuery(query -> query
-                    .multiMatch(mm -> mm
-                            .query(q)
-                            .fields(
-                                    TITLE_FIELD + FIELD_PRIORITY,
-                                    DESCRIPTION_FIELD,
-                                    ATTRIBUTES_TITLE_FIELD,
-                                    ATTRIBUTES_VALUES_FIELD
-                            ).fuzziness(FUZZINESS_MODE)
-                    )
-            );
+            builder.withQuery(query -> query.multiMatch(mm -> mm.query(q).fields(TITLE_FIELD + FIELD_PRIORITY, DESCRIPTION_FIELD, ATTRIBUTES_TITLE_FIELD, ATTRIBUTES_VALUES_FIELD).fuzziness(FUZZINESS_MODE)));
         }
     }
 
@@ -100,7 +88,7 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
                 n.field(PRICE_FIELD);
 
                 if (minOpt.isPresent()) {
-                   n.gte(minPrice.doubleValue());
+                    n.gte(minPrice.doubleValue());
                 }
 
                 if (maxOpt.isPresent()) {
@@ -114,27 +102,11 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
 
     private void withAttributeFilter(AttributeFilter filter, NativeQueryBuilder builder) {
         if (Optional.ofNullable(filter).isPresent() && !filter.attributes().isEmpty()) {
-            filter.attributes().forEach(attribute -> builder
-                    .withFilter(f -> f
-                            .terms(t -> t.field(attribute.title())
-                                    .terms(s -> s
-                                            .value(attribute.values().stream()
-                                                    .map(FieldValue::of)
-                                                    .toList()))))
-            );
+            filter.attributes().forEach(attribute -> builder.withFilter(f -> f.terms(t -> t.field(attribute.id()).terms(s -> s.value(attribute.values().stream().map(FieldValue::of).toList())))));
         }
     }
 
     private ElasticProductSearchItem toSearchItem(SearchHit<ElasticProductSearchItem> hit) {
-        return new ElasticProductSearchItem(
-                hit.getContent().id(),
-                hit.getContent().title(),
-                hit.getContent().description(),
-                hit.getContent().quantity(),
-                hit.getContent().price(),
-                hit.getContent().ownerId(),
-                hit.getContent().categoryId(),
-                hit.getContent().attributes(),
-                hit.getContent().active());
+        return new ElasticProductSearchItem(hit.getContent().id(), hit.getContent().title(), hit.getContent().description(), hit.getContent().quantity(), hit.getContent().price(), hit.getContent().ownerId(), hit.getContent().categoryId(), hit.getContent().attributes(), hit.getContent().active());
     }
 }

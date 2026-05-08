@@ -15,6 +15,7 @@ public record ProductSearchItem(
         Boolean active) {
 
     public record SearchAttribute(
+            String id,
             String title,
             String type,
             List<String> values) {
