@@ -6,7 +6,7 @@ import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.stereotype.Component;
 
 @Component
-public final class CategoryQueryBuilder implements QueryBuilder<ProductSearchItem> {
+public final class CategoryIdQueryBuilder implements QueryBuilder<ProductSearchItem> {
 
     @Override
     public void build(ProductSearchItem payload, NativeQueryBuilder builder) {

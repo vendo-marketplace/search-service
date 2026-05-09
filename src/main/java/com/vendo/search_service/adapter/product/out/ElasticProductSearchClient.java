@@ -23,7 +23,7 @@ import java.util.Set;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ElasticProductSearchClient implements SearchRepository<ElasticProductSearchItem> {
+public class ElasticProductSearchClient implements SearchRepository<ElasticProductSearchItem, ProductSearchRequest> {
 
     @Value("${product.search.size}")
     private int DEFAULT_SIZE;
@@ -32,6 +32,7 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
 
     private static final String FUZZINESS_MODE = "AUTO";
     private static final String FIELD_PRIORITY = "^3";
+
     private static final String TITLE_FIELD = "title";
     private static final String DESCRIPTION_FIELD = "title";
     private static final String ATTRIBUTES_FIELD = "attributes";
@@ -56,7 +57,9 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
                 .filter(Objects::nonNull)
                 .forEach(qb -> qb.build(request, queryBuilder));
 
-        return operations.search(queryBuilder.build(), ElasticProductSearchItem.class).stream().map(SearchHit::getContent).toList();
+        return operations.search(queryBuilder.build(), ElasticProductSearchItem.class).stream()
+                .map(SearchHit::getContent)
+                .toList();
     }
 
     private void withPageable(PageRequest page, NativeQueryBuilder builder) {

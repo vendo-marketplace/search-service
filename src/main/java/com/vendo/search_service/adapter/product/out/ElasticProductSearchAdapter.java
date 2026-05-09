@@ -14,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ElasticProductSearchAdapter implements ProductSearchPort {
 
-    private final SearchRepository<ElasticProductSearchItem> repository;
+    private final SearchRepository<ElasticProductSearchItem, ProductSearchRequest> repository;
     private final ElasticProductMapper mapper;
 
     @Override

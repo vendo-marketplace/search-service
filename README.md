@@ -16,8 +16,6 @@ The service is designed to:
 - Support pagination
 - Return optimized search results
 
-It operates purely on the **read side of CQRS**.
-
 ---
 
 # Tech Stack
@@ -38,7 +36,6 @@ It operates purely on the **read side of CQRS**.
 The service follows:
 
 - **Hexagonal Architecture (Ports and Adapters)**
-- **CQRS (Read side only)**
 
 It is fully decoupled from write operations and focuses only on querying data.
 
@@ -138,8 +135,6 @@ This process ensures **eventual consistency** between write and read models.
 
 # Role in System
 
-The service is part of a CQRS pipeline:
-
 Write Services → Events → Indexer Service → Elasticsearch
 
 ---
@@ -150,7 +145,6 @@ Required infrastructure:
 
 - Configuration service
 - Service registry
-- Kafka (event streaming)
 - Elasticsearch (search storage)
 
 ---
