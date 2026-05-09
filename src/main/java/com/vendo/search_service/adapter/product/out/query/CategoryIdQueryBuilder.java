@@ -11,7 +11,7 @@ public final class CategoryIdQueryBuilder implements QueryBuilder<ProductSearchI
     @Override
     public void build(ProductSearchItem payload, NativeQueryBuilder builder) {
         if (!StringUtils.isEmpty(payload.categoryId())) {
-            builder.withQuery(query -> query.term(t -> t.field(getField()).value(payload.categoryId())));
+            builder.withFilter(query -> query.term(t -> t.field(getField()).value(payload.categoryId())));
         }
     }
 

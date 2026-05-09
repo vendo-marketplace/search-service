@@ -19,8 +19,6 @@ public record ElasticProductSearchItem(
 
     public record ElasticSearchAttribute(
             String id,
-            String title,
-            String type,
             List<String> values) {
     }
 }
