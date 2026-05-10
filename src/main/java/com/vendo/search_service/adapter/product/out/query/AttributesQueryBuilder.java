@@ -13,6 +13,7 @@ public final class AttributesQueryBuilder implements QueryBuilder<ProductSearchI
 
     @Override
     public void build(ProductSearchItem payload, NativeQueryBuilder builder) {
+        System.out.println(payload);
         AttributeFilter filter = payload.attributeFilter();
         if (Optional.ofNullable(filter).isPresent() && !filter.attributes().isEmpty()) {
             filter.attributes()
