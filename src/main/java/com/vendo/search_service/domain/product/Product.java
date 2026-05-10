@@ -1,12 +1,9 @@
-package com.vendo.search_service.adapter.product.out;
-
-import org.springframework.data.elasticsearch.annotations.Document;
+package com.vendo.search_service.domain.product;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-@Document(indexName = "products")
-public record ElasticProductSearchItem(
+public record Product(
         String id,
         String title,
         String description,
@@ -14,13 +11,14 @@ public record ElasticProductSearchItem(
         BigDecimal price,
         String ownerId,
         String categoryId,
-        List<ElasticSearchAttribute> attributes,
+        List<Attribute> attributes,
         Boolean active) {
 
-    public record ElasticSearchAttribute(
+    public record Attribute(
             String id,
             String title,
             String type,
             List<String> values) {
     }
+
 }

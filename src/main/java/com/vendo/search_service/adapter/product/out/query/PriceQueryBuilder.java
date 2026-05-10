@@ -1,6 +1,6 @@
 package com.vendo.search_service.adapter.product.out.query;
 
-import com.vendo.search_service.application.product.dto.ProductSearchRequest;
+import com.vendo.search_service.domain.product.ProductSearchItem;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.stereotype.Component;
 
@@ -8,10 +8,10 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 @Component
-public final class PriceQueryBuilder implements QueryBuilder<ProductSearchRequest> {
+public final class PriceQueryBuilder implements QueryBuilder<ProductSearchItem> {
 
     @Override
-    public void build(ProductSearchRequest payload, NativeQueryBuilder builder) {
+    public void build(ProductSearchItem payload, NativeQueryBuilder builder) {
         Optional<BigDecimal> minOpt = Optional.ofNullable(payload.minPrice());
         Optional<BigDecimal> maxOpt = Optional.ofNullable(payload.maxPrice());
 

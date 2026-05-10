@@ -2,7 +2,7 @@ package com.vendo.search_service.adapter.product.out;
 
 import com.vendo.search_service.adapter.product.out.mapper.ElasticProductMapper;
 import com.vendo.search_service.adapter.search.SearchRepository;
-import com.vendo.search_service.application.product.dto.ProductSearchRequest;
+import com.vendo.search_service.domain.product.Product;
 import com.vendo.search_service.domain.product.ProductSearchItem;
 import com.vendo.search_service.port.ProductSearchPort;
 import lombok.RequiredArgsConstructor;
@@ -14,12 +14,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ElasticProductSearchAdapter implements ProductSearchPort {
 
-    private final SearchRepository<ElasticProductSearchItem, ProductSearchRequest> repository;
+    private final SearchRepository<ElasticProductSearchItem, ProductSearchItem> repository;
     private final ElasticProductMapper mapper;
 
     @Override
-    public List<ProductSearchItem> search(String q, ProductSearchRequest request) {
-        List<ElasticProductSearchItem> result = repository.search(q, request);
+    public List<Product> search(String q, ProductSearchItem searchItem) {
+        List<ElasticProductSearchItem> result = repository.search(q, searchItem);
         return mapper.toProducts(result);
     }
 }

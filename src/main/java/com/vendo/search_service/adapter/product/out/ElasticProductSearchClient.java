@@ -2,9 +2,10 @@ package com.vendo.search_service.adapter.product.out;
 
 import com.vendo.search_service.adapter.product.out.query.ProductQueryFactory;
 import com.vendo.search_service.adapter.search.SearchRepository;
-import com.vendo.search_service.application.product.dto.ProductSearchRequest;
+import com.vendo.search_service.domain.product.Product;
 import com.vendo.search_service.domain.product.ProductSearchItem;
 import com.vendo.search_service.shared.ClassFieldExtractor;
+import com.vendo.utils_lib.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,12 +19,11 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ElasticProductSearchClient implements SearchRepository<ElasticProductSearchItem, ProductSearchRequest> {
+public class ElasticProductSearchClient implements SearchRepository<ElasticProductSearchItem, ProductSearchItem> {
 
     @Value("${product.search.size}")
     private int DEFAULT_SIZE;
@@ -34,9 +34,8 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
     private static final String FIELD_PRIORITY = "^3";
 
     private static final String TITLE_FIELD = "title";
-    private static final String DESCRIPTION_FIELD = "title";
+    private static final String DESCRIPTION_FIELD = "description";
     private static final String ATTRIBUTES_FIELD = "attributes";
-    private static final String ATTRIBUTES_TITLE_FIELD = ATTRIBUTES_FIELD + ".title";
     private static final String ATTRIBUTES_VALUES_FIELD = ATTRIBUTES_FIELD + ".values";
 
     private final ElasticsearchOperations operations;
@@ -44,22 +43,18 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
     private final NativeQueryBuilder queryBuilder = NativeQuery.builder();
 
     @Override
-    public List<ElasticProductSearchItem> search(String q, ProductSearchRequest request) {
-        int page = request.page() != null ? request.page() : DEFAULT_PAGE;
-        int size = request.size() != null ? request.size() : DEFAULT_SIZE;
+    public List<ElasticProductSearchItem> search(String q, ProductSearchItem searchItem) {
+        withPageable(PageRequest.of(getPage(searchItem), getSize(searchItem)), queryBuilder);
 
-        withPageable(PageRequest.of(page, size), queryBuilder);
-        withQuery(q, queryBuilder);
+        if (StringUtils.isEmpty(q) && Objects.isNull(searchItem)) return search();
 
-        Set<String> fields = ClassFieldExtractor.extract(ProductSearchItem.class);
-        fields.stream()
+        ClassFieldExtractor.extract(Product.class).stream()
                 .map(productQueryFactory::getBuilder)
                 .filter(Objects::nonNull)
-                .forEach(qb -> qb.build(request, queryBuilder));
+                .forEach(qb -> qb.build(searchItem, queryBuilder));
 
-        return operations.search(queryBuilder.build(), ElasticProductSearchItem.class).stream()
-                .map(SearchHit::getContent)
-                .toList();
+        withQuery(q, queryBuilder);
+        return search();
     }
 
     private void withPageable(PageRequest page, NativeQueryBuilder builder) {
@@ -70,9 +65,23 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         if (Optional.ofNullable(q).isPresent()) {
             builder.withQuery(query -> query.multiMatch(mm -> mm
                     .query(q)
-                    .fields(TITLE_FIELD + FIELD_PRIORITY, DESCRIPTION_FIELD, ATTRIBUTES_TITLE_FIELD, ATTRIBUTES_VALUES_FIELD)
+                    .fields(TITLE_FIELD + FIELD_PRIORITY, DESCRIPTION_FIELD, ATTRIBUTES_VALUES_FIELD)
                     .fuzziness(FUZZINESS_MODE)
             ));
         }
+    }
+
+    private List<ElasticProductSearchItem> search() {
+        return operations.search(queryBuilder.build(), ElasticProductSearchItem.class).stream()
+                .map(SearchHit::getContent)
+                .toList();
+    }
+
+    private int getPage(ProductSearchItem searchItem) {
+        return (searchItem != null && searchItem.page() != null) ? searchItem.page() : DEFAULT_PAGE;
+    }
+
+    private int getSize(ProductSearchItem searchItem) {
+        return (searchItem != null && searchItem.size() != null) ? searchItem.size() : DEFAULT_SIZE;
     }
 }

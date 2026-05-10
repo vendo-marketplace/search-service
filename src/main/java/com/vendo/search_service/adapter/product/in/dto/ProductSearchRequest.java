@@ -1,6 +1,4 @@
-package com.vendo.search_service.application.product.dto;
-
-import com.vendo.search_service.domain.search.AttributeFilter;
+package com.vendo.search_service.adapter.product.in.dto;
 
 import java.math.BigDecimal;
 
@@ -9,7 +7,7 @@ public record ProductSearchRequest(
         String categoryId,
         Boolean active,
 
-        AttributeFilter attributeFilter,
+        AttributeFilterRequest attributeFilter,
 
         BigDecimal minPrice,
         BigDecimal maxPrice,
