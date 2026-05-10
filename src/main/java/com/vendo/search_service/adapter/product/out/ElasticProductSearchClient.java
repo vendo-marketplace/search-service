@@ -46,14 +46,17 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
     public List<ElasticProductSearchItem> search(String q, ProductSearchItem searchItem) {
         withPageable(PageRequest.of(getPage(searchItem), getSize(searchItem)), queryBuilder);
 
-        if (StringUtils.isEmpty(q) && Objects.isNull(searchItem)) return search();
+        if (!Objects.isNull(searchItem)) {
+            ClassFieldExtractor.extract(Product.class).stream()
+                    .map(productQueryFactory::getBuilder)
+                    .filter(Objects::nonNull)
+                    .forEach(qb -> qb.build(searchItem, queryBuilder));
+        }
 
-        ClassFieldExtractor.extract(Product.class).stream()
-                .map(productQueryFactory::getBuilder)
-                .filter(Objects::nonNull)
-                .forEach(qb -> qb.build(searchItem, queryBuilder));
+        if (!StringUtils.isEmpty(q)) {
+            withQuery(q, queryBuilder);
+        }
 
-        withQuery(q, queryBuilder);
         return search();
     }
 
