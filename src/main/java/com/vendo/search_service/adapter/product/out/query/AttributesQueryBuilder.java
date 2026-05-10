@@ -21,8 +21,7 @@ public final class AttributesQueryBuilder implements QueryBuilder<ProductSearchI
                                     .terms(t -> t
                                             .field(attribute.id())
                                             .terms(s -> s
-                                                    .value(attribute.values().stream().map(FieldValue::of)
-                                                            .toList()))))
+                                                    .value(attribute.values().stream().map(FieldValue::of).toList()))))
                     );
         }
     }

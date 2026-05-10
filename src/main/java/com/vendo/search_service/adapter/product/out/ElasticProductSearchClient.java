@@ -36,6 +36,7 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
     private static final String TITLE_FIELD = "title";
     private static final String DESCRIPTION_FIELD = "description";
     private static final String ATTRIBUTES_FIELD = "attributes";
+    private static final String ATTRIBUTES_ID_FIELD = ATTRIBUTES_FIELD + ".id";
     private static final String ATTRIBUTES_VALUES_FIELD = ATTRIBUTES_FIELD + ".values";
 
     private final ElasticsearchOperations operations;
@@ -68,7 +69,7 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         if (Optional.ofNullable(q).isPresent()) {
             builder.withQuery(query -> query.multiMatch(mm -> mm
                     .query(q)
-                    .fields(TITLE_FIELD + FIELD_PRIORITY, DESCRIPTION_FIELD, ATTRIBUTES_VALUES_FIELD)
+                    .fields(TITLE_FIELD + FIELD_PRIORITY, DESCRIPTION_FIELD, ATTRIBUTES_VALUES_FIELD, ATTRIBUTES_ID_FIELD)
                     .fuzziness(FUZZINESS_MODE)
             ));
         }
