@@ -1,10 +1,9 @@
 package com.vendo.search_service.adapter.product.out;
 
-import com.vendo.search_service.adapter.product.out.query.ProductQueryFactory;
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import com.vendo.search_service.adapter.search.SearchRepository;
-import com.vendo.search_service.domain.product.Product;
+import com.vendo.search_service.domain.product.AttributeFilter;
 import com.vendo.search_service.domain.product.ProductSearchItem;
-import com.vendo.search_service.shared.ClassFieldExtractor;
 import com.vendo.utils_lib.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,62 +15,100 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
+
+import static com.vendo.search_service.adapter.product.out.constants.ProductSearchFields.*;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ElasticProductSearchClient implements SearchRepository<ElasticProductSearchItem, ProductSearchItem> {
 
+    private static final String FUZZINESS_MODE = "AUTO";
+    private static final String FIELD_PRIORITY = "^3";
+    private final ElasticsearchOperations operations;
+    private final NativeQueryBuilder queryBuilder = NativeQuery.builder();
     @Value("${product.search.size}")
     private int DEFAULT_SIZE;
     @Value("${product.search.page}")
     private int DEFAULT_PAGE;
 
-    private static final String FUZZINESS_MODE = "AUTO";
-    private static final String FIELD_PRIORITY = "^3";
-
-    private static final String TITLE_FIELD = "title";
-    private static final String DESCRIPTION_FIELD = "description";
-    private static final String ATTRIBUTES_FIELD = "attributes";
-    private static final String ATTRIBUTES_ID_FIELD = ATTRIBUTES_FIELD + ".id";
-    private static final String ATTRIBUTES_VALUES_FIELD = ATTRIBUTES_FIELD + ".values";
-
-    private final ElasticsearchOperations operations;
-    private final ProductQueryFactory productQueryFactory;
-    private final NativeQueryBuilder queryBuilder = NativeQuery.builder();
-
     @Override
     public List<ElasticProductSearchItem> search(String q, ProductSearchItem searchItem) {
-        withPageable(PageRequest.of(getPage(searchItem), getSize(searchItem)), queryBuilder);
 
-        if (!Objects.isNull(searchItem)) {
-            ClassFieldExtractor.extract(Product.class).stream()
-                    .map(productQueryFactory::getBuilder)
-                    .filter(Objects::nonNull)
-                    .forEach(qb -> qb.build(searchItem, queryBuilder));
-        }
+        withQuery(q);
+        withPageable(PageRequest.of(getPage(searchItem), getSize(searchItem)));
 
-        if (!StringUtils.isEmpty(q)) {
-            withQuery(q, queryBuilder);
-        }
+        withCategoryId(searchItem);
+        withActive(searchItem);
+        withPrice(searchItem);
+        withAttributes(searchItem);
 
         return search();
     }
 
-    private void withPageable(PageRequest page, NativeQueryBuilder builder) {
-        builder.withPageable(page);
+    private void withPageable(PageRequest page) {
+        queryBuilder.withPageable(page);
     }
 
-    private void withQuery(String q, NativeQueryBuilder builder) {
+    private void withQuery(String q) {
         if (Optional.ofNullable(q).isPresent()) {
-            builder.withQuery(query -> query.multiMatch(mm -> mm
+            queryBuilder.withQuery(query -> query.multiMatch(mm -> mm
                     .query(q)
-                    .fields(TITLE_FIELD + FIELD_PRIORITY, DESCRIPTION_FIELD, ATTRIBUTES_VALUES_FIELD, ATTRIBUTES_ID_FIELD)
+                    .fields(TITLE + FIELD_PRIORITY, DESCRIPTION, ATTRIBUTES_VALUES, ATTRIBUTES_ID)
                     .fuzziness(FUZZINESS_MODE)
             ));
+        }
+    }
+
+    private void withAttributes(ProductSearchItem searchItem) {
+        if (searchItem != null && searchItem.attributeFilter() != null) {
+
+            AttributeFilter filter = searchItem.attributeFilter();
+            if (filter.attributes().isEmpty()) return;
+
+            filter.attributes()
+                    .forEach(attribute -> queryBuilder
+                            .withFilter(f -> f
+                                    .terms(t -> t
+                                            .field(attribute.id())
+                                            .terms(s -> s
+                                                    .value(attribute.values().stream().map(FieldValue::of).toList())))));
+        }
+    }
+
+    private void withCategoryId(ProductSearchItem searchItem) {
+        if (!StringUtils.isEmpty(searchItem.categoryId())) {
+            queryBuilder.withFilter(query -> query.term(t -> t.field(CATEGORY_ID).value(searchItem.categoryId())));
+        }
+    }
+
+    private void withActive(ProductSearchItem searchItem) {
+        if (Optional.ofNullable(searchItem.active()).isPresent()) {
+            queryBuilder.withFilter(f -> f.term(t -> t.field(ACTIVE).value(searchItem.active())));
+        }
+    }
+
+    private void withPrice(ProductSearchItem searchItem) {
+        Optional<BigDecimal> minOpt = Optional.ofNullable(searchItem.minPrice());
+        Optional<BigDecimal> maxOpt = Optional.ofNullable(searchItem.maxPrice());
+
+        if (minOpt.isEmpty() || maxOpt.isPresent()) {
+            queryBuilder.withQuery(query -> query.bool(b -> b.filter(f -> f.range(r -> r.number(n -> {
+                n.field(PRICE);
+
+                if (minOpt.isPresent()) {
+                    n.gte(searchItem.minPrice().doubleValue());
+                }
+
+                if (maxOpt.isPresent()) {
+                    n.lte(searchItem.maxPrice().doubleValue());
+                }
+
+                return n;
+            })))));
         }
     }
 
