@@ -43,6 +43,8 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         withQuery(q);
         withPageable(PageRequest.of(getPage(searchItem), getSize(searchItem)));
 
+        if (searchItem == null) return search();
+
         withCategoryId(searchItem);
         withActive(searchItem);
         withPrice(searchItem);
@@ -56,29 +58,50 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
     }
 
     private void withQuery(String q) {
-        if (Optional.ofNullable(q).isPresent()) {
+        if (!StringUtils.isEmpty(q)) {
             queryBuilder.withQuery(query -> query.multiMatch(mm -> mm
                     .query(q)
                     .fields(TITLE + FIELD_PRIORITY, DESCRIPTION, ATTRIBUTES_VALUES, ATTRIBUTES_ID)
                     .fuzziness(FUZZINESS_MODE)
             ));
+        } else {
+            queryBuilder.withFilter(query -> query.matchAll(m -> m));
         }
     }
 
     private void withAttributes(ProductSearchItem searchItem) {
-        if (searchItem != null && searchItem.attributeFilter() != null) {
 
-            AttributeFilter filter = searchItem.attributeFilter();
-            if (filter.attributes().isEmpty()) return;
-
-            filter.attributes()
-                    .forEach(attribute -> queryBuilder
-                            .withFilter(f -> f
-                                    .terms(t -> t
-                                            .field(attribute.id())
-                                            .terms(s -> s
-                                                    .value(attribute.values().stream().map(FieldValue::of).toList())))));
+        if (searchItem.attributeFilter() == null) {
+            return;
         }
+
+        AttributeFilter filter = searchItem.attributeFilter();
+
+        if (filter.attributes().isEmpty()) {
+            return;
+        }
+
+        filter.attributes().forEach(attribute -> {
+
+            queryBuilder.withFilter(f -> f.nested(n -> n
+                    .path(ATTRIBUTES)
+                    .query(q -> q.bool(b -> b
+                            .must(m -> m.term(t -> t
+                                    .field(ATTRIBUTES_ID)
+                                    .value(FieldValue.of(attribute.id()))
+                            ))
+                            .must(m -> m.terms(t -> t
+                                    .field(ATTRIBUTES_VALUES)
+                                    .terms(ts -> ts.value(
+                                            attribute.values()
+                                                    .stream()
+                                                    .map(FieldValue::of)
+                                                    .toList()
+                                    ))
+                            ))
+                    ))
+            ));
+        });
     }
 
     private void withCategoryId(ProductSearchItem searchItem) {
