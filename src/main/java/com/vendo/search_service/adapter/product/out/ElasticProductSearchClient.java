@@ -28,8 +28,10 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
 
     private static final String FUZZINESS_MODE = "AUTO";
     private static final String FIELD_PRIORITY = "^3";
+
     private final ElasticsearchOperations operations;
     private final NativeQueryBuilder queryBuilder = NativeQuery.builder();
+
     @Value("${product.search.size}")
     private int DEFAULT_SIZE;
     @Value("${product.search.page}")
@@ -81,7 +83,7 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
 
     private void withCategoryId(ProductSearchItem searchItem) {
         if (!StringUtils.isEmpty(searchItem.categoryId())) {
-            queryBuilder.withFilter(query -> query.term(t -> t.field(CATEGORY_ID).value(searchItem.categoryId())));
+            queryBuilder.withFilter(query -> query.term(t -> t.field(CATEGORY_ID).value(v -> v.stringValue(searchItem.categoryId()))));
         }
     }
 
@@ -95,7 +97,7 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         Optional<BigDecimal> minOpt = Optional.ofNullable(searchItem.minPrice());
         Optional<BigDecimal> maxOpt = Optional.ofNullable(searchItem.maxPrice());
 
-        if (minOpt.isEmpty() || maxOpt.isPresent()) {
+        if (minOpt.isPresent() || maxOpt.isPresent()) {
             queryBuilder.withQuery(query -> query.bool(b -> b.filter(f -> f.range(r -> r.number(n -> {
                 n.field(PRICE);
 
