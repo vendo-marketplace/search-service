@@ -30,7 +30,7 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
     private static final String FIELD_PRIORITY = "^3";
 
     private final ElasticsearchOperations operations;
-    private final NativeQueryBuilder queryBuilder = NativeQuery.builder();
+
 
     @Value("${product.search.size}")
     private int DEFAULT_SIZE;
@@ -39,25 +39,26 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
 
     @Override
     public List<ElasticProductSearchItem> search(String q, ProductSearchItem searchItem) {
+        NativeQueryBuilder queryBuilder = NativeQuery.builder();
 
-        withQuery(q);
-        withPageable(PageRequest.of(getPage(searchItem), getSize(searchItem)));
+        withQuery(q, queryBuilder);
+        withPageable(PageRequest.of(getPage(searchItem), getSize(searchItem)), queryBuilder);
 
-        if (searchItem == null) return search();
+        if (searchItem == null) return search(queryBuilder);
 
-        withCategoryId(searchItem);
-        withActive(searchItem);
-        withPrice(searchItem);
-        withAttributes(searchItem);
+        withCategoryId(searchItem, queryBuilder);
+        withActive(searchItem, queryBuilder);
+        withPrice(searchItem, queryBuilder);
+        withAttributes(searchItem, queryBuilder);
 
-        return search();
+        return search(queryBuilder);
     }
 
-    private void withPageable(PageRequest page) {
+    private void withPageable(PageRequest page, NativeQueryBuilder queryBuilder) {
         queryBuilder.withPageable(page);
     }
 
-    private void withQuery(String q) {
+    private void withQuery(String q, NativeQueryBuilder queryBuilder) {
         if (!StringUtils.isEmpty(q)) {
             queryBuilder.withQuery(query -> query.multiMatch(mm -> mm
                     .query(q)
@@ -69,7 +70,7 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         }
     }
 
-    private void withAttributes(ProductSearchItem searchItem) {
+    private void withAttributes(ProductSearchItem searchItem, NativeQueryBuilder queryBuilder) {
 
         if (searchItem.attributeFilter() == null) {
             return;
@@ -104,19 +105,19 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         });
     }
 
-    private void withCategoryId(ProductSearchItem searchItem) {
+    private void withCategoryId(ProductSearchItem searchItem, NativeQueryBuilder queryBuilder) {
         if (!StringUtils.isEmpty(searchItem.categoryId())) {
             queryBuilder.withFilter(query -> query.term(t -> t.field(CATEGORY_ID).value(v -> v.stringValue(searchItem.categoryId()))));
         }
     }
 
-    private void withActive(ProductSearchItem searchItem) {
+    private void withActive(ProductSearchItem searchItem, NativeQueryBuilder queryBuilder) {
         if (Optional.ofNullable(searchItem.active()).isPresent()) {
             queryBuilder.withFilter(f -> f.term(t -> t.field(ACTIVE).value(searchItem.active())));
         }
     }
 
-    private void withPrice(ProductSearchItem searchItem) {
+    private void withPrice(ProductSearchItem searchItem, NativeQueryBuilder queryBuilder) {
         Optional<BigDecimal> minOpt = Optional.ofNullable(searchItem.minPrice());
         Optional<BigDecimal> maxOpt = Optional.ofNullable(searchItem.maxPrice());
 
@@ -137,7 +138,7 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         }
     }
 
-    private List<ElasticProductSearchItem> search() {
+    private List<ElasticProductSearchItem> search(NativeQueryBuilder queryBuilder) {
         return operations.search(queryBuilder.build(), ElasticProductSearchItem.class).stream()
                 .map(SearchHit::getContent)
                 .toList();

@@ -13,7 +13,7 @@ public class  ProductSearchFields {
     public static final String ACTIVE = "active";
     public static final String CATEGORY_ID = "categoryId";
     public static final String ATTRIBUTES = "attributes";
-    public static final String ATTRIBUTES_ID = "attributes.id";
-    public static final String ATTRIBUTES_VALUES = "attributes.values";
+    public static final String ATTRIBUTES_ID = ATTRIBUTES + ".id";
+    public static final String ATTRIBUTES_VALUES = ATTRIBUTES + ".values";
 
 }
