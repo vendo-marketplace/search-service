@@ -60,11 +60,23 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
 
     private void withQuery(String q, NativeQueryBuilder queryBuilder) {
         if (!StringUtils.isEmpty(q)) {
-            queryBuilder.withQuery(query -> query.multiMatch(mm -> mm
-                    .query(q)
-                    .fields(TITLE + FIELD_PRIORITY, DESCRIPTION, ATTRIBUTES_VALUES, ATTRIBUTES_ID)
-                    .fuzziness(FUZZINESS_MODE)
-            ));
+            queryBuilder.withQuery(query -> query
+                    .bool(b -> b
+                            .should(s -> s
+                                    .matchPhrase(ph -> ph
+                                            .field(TITLE)
+                                            .query(q)
+                                            .boost(10f)
+                                    )
+                            )
+                            .should(s -> s.multiMatch(m -> m
+                                            .query(q)
+                                            .fields(TITLE + FIELD_PRIORITY, DESCRIPTION)
+                                            .fuzziness(FUZZINESS_MODE)
+                                    )
+                            )
+                    )
+            );
         } else {
             queryBuilder.withFilter(query -> query.matchAll(m -> m));
         }
