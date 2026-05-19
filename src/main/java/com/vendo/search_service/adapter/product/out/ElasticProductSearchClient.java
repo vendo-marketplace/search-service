@@ -98,7 +98,7 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
 
         SortOrder order =
                 sort != null && sort.direction() != null
-                        ? SortOrder.valueOf(sort.direction().name())
+                        ? SortOrder.valueOf(sort.direction().getDirection())
                         : SortOrder.Desc;
 
         queryBuilder.withSort(s -> s
