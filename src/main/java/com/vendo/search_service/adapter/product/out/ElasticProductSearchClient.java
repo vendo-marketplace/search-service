@@ -1,6 +1,7 @@
 package com.vendo.search_service.adapter.product.out;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.vendo.search_service.adapter.search.SearchRepository;
 import com.vendo.search_service.domain.product.AttributeFilter;
 import com.vendo.search_service.domain.product.ProductSearchItem;
@@ -31,9 +32,9 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
 
     private final ElasticsearchOperations operations;
 
-
     @Value("${product.search.size}")
     private int DEFAULT_SIZE;
+
     @Value("${product.search.page}")
     private int DEFAULT_PAGE;
 
@@ -83,38 +84,36 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
     }
 
     private void withAttributes(ProductSearchItem searchItem, NativeQueryBuilder queryBuilder) {
-
         if (searchItem.attributeFilter() == null) {
             return;
         }
 
         AttributeFilter filter = searchItem.attributeFilter();
-
         if (filter.attributes().isEmpty()) {
             return;
         }
 
-        filter.attributes().forEach(attribute -> {
+        List<Query> attributeQueries = filter.attributes().stream().map(attribute -> new Query.Builder().nested(n -> n
+                .path(ATTRIBUTES)
+                .query(q -> q.bool(b -> b
+                        .must(m -> m.term(t -> t
+                                .field(ATTRIBUTES_ID)
+                                .value(FieldValue.of(attribute.id()))
+                        ))
+                        .must(m -> m.terms(t -> t
+                                .field(ATTRIBUTES_VALUES)
+                                .terms(ts -> ts.value(
+                                        attribute.values()
+                                                .stream()
+                                                .map(FieldValue::of)
+                                                .toList()
+                                ))
+                        ))
+                ))).build()).toList();
 
-            queryBuilder.withFilter(f -> f.nested(n -> n
-                    .path(ATTRIBUTES)
-                    .query(q -> q.bool(b -> b
-                            .must(m -> m.term(t -> t
-                                    .field(ATTRIBUTES_ID)
-                                    .value(FieldValue.of(attribute.id()))
-                            ))
-                            .must(m -> m.terms(t -> t
-                                    .field(ATTRIBUTES_VALUES)
-                                    .terms(ts -> ts.value(
-                                            attribute.values()
-                                                    .stream()
-                                                    .map(FieldValue::of)
-                                                    .toList()
-                                    ))
-                            ))
-                    ))
-            ));
-        });
+        queryBuilder.withQuery(q -> q.bool(b -> b
+                .must(attributeQueries)
+        ));
     }
 
     private void withCategoryId(ProductSearchItem searchItem, NativeQueryBuilder queryBuilder) {
