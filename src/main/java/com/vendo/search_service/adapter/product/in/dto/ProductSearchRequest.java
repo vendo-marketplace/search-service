@@ -1,20 +1,17 @@
 package com.vendo.search_service.adapter.product.in.dto;
 
-import java.math.BigDecimal;
+import com.vendo.search_service.domain.product.sort.SortBody;
 
 public record ProductSearchRequest(
-
         String categoryId,
         Boolean active,
 
-        AttributeFilterRequest attributeFilter,
+        SortBody sort,
 
-        BigDecimal minPrice,
-        BigDecimal maxPrice,
+        AttributeFilterRequest attributeFilter,
+        PriceRangeFilterRequest priceRangeFilter,
 
         Integer size,
         Integer page
-
 ) {
-
 }
