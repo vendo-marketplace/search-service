@@ -15,10 +15,10 @@ public interface ElasticProductMapper {
 
     List<Product> toProducts(List<ElasticProductSearchItem> entities);
 
-    default LocalDateTime toLocalDateTime(Instant instant) {
-        return instant == null
+    default LocalDateTime toLocalDateTime(Instant date) {
+        return date == null
                 ? null
-                : LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
+                : LocalDateTime.ofInstant(date, ZoneOffset.UTC);
     }
 
 }
