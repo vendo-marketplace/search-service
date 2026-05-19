@@ -8,6 +8,7 @@ import com.vendo.search_service.domain.product.ProductSearchItem;
 import com.vendo.search_service.domain.product.filter.AttributeFilter;
 import com.vendo.search_service.domain.product.sort.ProductSortField;
 import com.vendo.search_service.domain.product.sort.SortBody;
+import com.vendo.search_service.domain.product.sort.SortDirection;
 import com.vendo.utils_lib.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
