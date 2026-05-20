@@ -1,6 +1,7 @@
 package com.vendo.search_service.adapter.product.out;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -39,7 +40,7 @@ public record ElasticProductSearchItem(
         @Field(type = FieldType.Boolean)
         Boolean active,
 
-        @Field(type = FieldType.Date)
+        @Field(type = FieldType.Date, format = DateFormat.date_time)
         Instant createdAt
 ) {
 
