@@ -41,7 +41,7 @@ public record ElasticProductSearchItem(
         @Field(type = FieldType.Boolean)
         Boolean active,
 
-        @Field(type = FieldType.Date, format = DateFormat.strict_date_time)
+        @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second_millis)
         LocalDateTime createdAt
 ) {
 
