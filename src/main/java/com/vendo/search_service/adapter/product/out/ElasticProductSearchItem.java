@@ -8,6 +8,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Document(indexName = "products")
@@ -40,8 +41,8 @@ public record ElasticProductSearchItem(
         @Field(type = FieldType.Boolean)
         Boolean active,
 
-        @Field(type = FieldType.Date, format = DateFormat.date_time)
-        Instant createdAt
+        @Field(type = FieldType.Date)
+        LocalDateTime createdAt
 ) {
 
     public record ElasticSearchAttribute(
