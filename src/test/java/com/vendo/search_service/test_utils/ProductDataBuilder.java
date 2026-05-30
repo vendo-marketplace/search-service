@@ -75,7 +75,6 @@ public class ProductDataBuilder {
     }
 
     public Product build() {
-        return new Product(
-                id, title, description, quantity, price, ownerId, categoryId, attributes, active, createdAt);
+        return new Product(id, title, description, quantity, price, ownerId, categoryId, attributes, active, createdAt);
     }
 }

@@ -75,7 +75,6 @@ public class ElasticProductSearchItemDataBuilder {
     }
 
     public ElasticProductSearchItem build() {
-        return new ElasticProductSearchItem(
-                id, title, description, quantity, price, ownerId, categoryId, attributes, active, createdAt);
+        return new ElasticProductSearchItem(id, title, description, quantity, price, ownerId, categoryId, attributes, active, createdAt);
     }
 }

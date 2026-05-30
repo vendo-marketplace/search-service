@@ -67,14 +67,7 @@ class ProductSearchControllerIntegrationTest {
             when(mapper.toSearchItem(any(ProductSearchRequest.class))).thenReturn(item);
             when(productSearchUseCase.search(eq("laptop"), eq(item))).thenReturn(products);
 
-            mockMvc.perform(post("/search")
-                            .param("q", "laptop")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$").isArray())
-                    .andExpect(jsonPath("$[0].id").value("p-1"))
-                    .andExpect(jsonPath("$[0].title").value("Gaming Laptop"));
+            mockMvc.perform(post("/search").param("q", "laptop").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request))).andExpect(status().isOk()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$[0].id").value("p-1")).andExpect(jsonPath("$[0].title").value("Gaming Laptop"));
 
             verify(mapper).toSearchItem(any(ProductSearchRequest.class));
             verify(productSearchUseCase).search("laptop", item);
@@ -88,13 +81,7 @@ class ProductSearchControllerIntegrationTest {
             when(mapper.toSearchItem(any(ProductSearchRequest.class))).thenReturn(item);
             when(productSearchUseCase.search(eq("laptop"), eq(item))).thenReturn(List.of());
 
-            mockMvc.perform(post("/search")
-                            .param("q", "laptop")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$").isArray())
-                    .andExpect(jsonPath("$.length()").value(0));
+            mockMvc.perform(post("/search").param("q", "laptop").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request))).andExpect(status().isOk()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$.length()").value(0));
         }
 
         @Test
@@ -102,8 +89,7 @@ class ProductSearchControllerIntegrationTest {
             when(mapper.toSearchItem(isNull())).thenReturn(null);
             when(productSearchUseCase.search(isNull(), isNull())).thenReturn(List.of());
 
-            mockMvc.perform(post("/search"))
-                    .andExpect(status().isOk());
+            mockMvc.perform(post("/search")).andExpect(status().isOk());
 
             verify(productSearchUseCase).search(isNull(), isNull());
         }
@@ -111,62 +97,40 @@ class ProductSearchControllerIntegrationTest {
 
     @Test
     void search_shouldReturnOk_whenMinPriceIsZero() throws Exception {
-        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty()
-                .priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.ZERO, null))
-                .build();
+        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty().priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.ZERO, null)).build();
 
         ProductSearchItem item = ProductSearchItemDataBuilder.empty().build();
         when(mapper.toSearchItem(any(ProductSearchRequest.class))).thenReturn(item);
         when(productSearchUseCase.search(isNull(), eq(item))).thenReturn(List.of());
 
-        mockMvc.perform(post("/search")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+        mockMvc.perform(post("/search").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
 
         verify(productSearchUseCase).search(isNull(), eq(item));
     }
 
     @Test
     void search_shouldReturnBadRequest_whenMinPriceIsNegative() throws Exception {
-        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty()
-                .priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.valueOf(-1), null))
-                .build();
+        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty().priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.valueOf(-1), null)).build();
 
-        mockMvc.perform(post("/search")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/search").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request))).andExpect(status().isBadRequest());
 
         verifyNoInteractions(productSearchUseCase);
     }
 
     @Test
     void search_shouldReturnBadRequest_whenAttributeIdIsNull() throws Exception {
-        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty()
-                .attributeFilter(new AttributeFilterRequest(List.of(
-                        new AttributeRequest(null, List.of("red")))))
-                .build();
+        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty().attributeFilter(new AttributeFilterRequest(List.of(new AttributeRequest(null, List.of("red"))))).build();
 
-        mockMvc.perform(post("/search")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/search").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request))).andExpect(status().isBadRequest());
 
         verifyNoInteractions(productSearchUseCase);
     }
 
     @Test
     void search_shouldReturnBadRequest_whenAttributeValuesAreEmpty() throws Exception {
-        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty()
-                .attributeFilter(new AttributeFilterRequest(List.of(
-                        new AttributeRequest("color", List.of()))))
-                .build();
+        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty().attributeFilter(new AttributeFilterRequest(List.of(new AttributeRequest("color", List.of())))).build();
 
-        mockMvc.perform(post("/search")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/search").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request))).andExpect(status().isBadRequest());
 
         verifyNoInteractions(productSearchUseCase);
     }

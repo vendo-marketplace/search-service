@@ -26,16 +26,7 @@ public class ProductSearchRequestDataBuilder {
     }
 
     public static ProductSearchRequestDataBuilder withAllFields() {
-        return new ProductSearchRequestDataBuilder()
-                .categoryId("category-1")
-                .active(true)
-                .sort(new SortBody(ProductSortField.PRICE, SortDirection.ASC))
-                .attributeFilter(new AttributeFilterRequest(List.of(
-                        new AttributeRequest("color", List.of("red", "blue"))
-                )))
-                .priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.TEN, BigDecimal.valueOf(100)))
-                .size(20)
-                .page(0);
+        return new ProductSearchRequestDataBuilder().categoryId("category-1").active(true).sort(new SortBody(ProductSortField.PRICE, SortDirection.ASC)).attributeFilter(new AttributeFilterRequest(List.of(new AttributeRequest("color", List.of("red", "blue"))))).priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.TEN, BigDecimal.valueOf(100))).size(20).page(0);
     }
 
     public ProductSearchRequestDataBuilder categoryId(String categoryId) {

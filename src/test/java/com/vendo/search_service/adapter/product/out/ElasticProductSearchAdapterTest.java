@@ -37,8 +37,7 @@ class ElasticProductSearchAdapterTest {
     void search_shouldDelegateToRepositoryAndMapResult() {
         String q = "laptop";
         ProductSearchItem searchItem = ProductSearchItemDataBuilder.withAllFields().build();
-        List<ElasticProductSearchItem> entities =
-                List.of(ElasticProductSearchItemDataBuilder.withAllFields().build());
+        List<ElasticProductSearchItem> entities = List.of(ElasticProductSearchItemDataBuilder.withAllFields().build());
         List<Product> products = List.of(ProductDataBuilder.withAllFields().build());
 
         when(repository.search(q, searchItem)).thenReturn(entities);

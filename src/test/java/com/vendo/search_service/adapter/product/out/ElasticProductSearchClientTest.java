@@ -64,8 +64,7 @@ class ElasticProductSearchClientTest {
         List<ElasticProductSearchItem> result = client.search("laptop", null);
 
         assertThat(result).containsExactly(item1, item2);
-        verify(operations).search(any(org.springframework.data.elasticsearch.core.query.Query.class),
-                eq(ElasticProductSearchItem.class));
+        verify(operations).search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class));
     }
 
     @Test
@@ -79,9 +78,7 @@ class ElasticProductSearchClientTest {
 
     @Test
     void search_shouldReturnEmptyList_whenIndexDoesNotExist() {
-        when(operations.search(any(org.springframework.data.elasticsearch.core.query.Query.class),
-                eq(ElasticProductSearchItem.class)))
-                .thenThrow(new NoSuchIndexException("products"));
+        when(operations.search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class))).thenThrow(new NoSuchIndexException("products"));
 
         List<ElasticProductSearchItem> result = client.search("laptop", null);
 
@@ -177,9 +174,7 @@ class ElasticProductSearchClientTest {
     void addsRangeWithMinAndMax_whenBothProvided() {
         givenSearchReturns();
 
-        client.search(null, ProductSearchItemDataBuilder.empty()
-                .priceRangeFilter(new PriceRangeFilter(BigDecimal.valueOf(10), BigDecimal.valueOf(100)))
-                .build());
+        client.search(null, ProductSearchItemDataBuilder.empty().priceRangeFilter(new PriceRangeFilter(BigDecimal.valueOf(10), BigDecimal.valueOf(100))).build());
 
         Query query = captureQuery().getQuery();
         Assertions.assertNotNull(query);
@@ -197,9 +192,7 @@ class ElasticProductSearchClientTest {
     void addsRangeWithOnlyMin_whenMaxIsNull() {
         givenSearchReturns();
 
-        client.search(null, ProductSearchItemDataBuilder.empty()
-                .priceRangeFilter(new PriceRangeFilter(BigDecimal.valueOf(10), null))
-                .build());
+        client.search(null, ProductSearchItemDataBuilder.empty().priceRangeFilter(new PriceRangeFilter(BigDecimal.valueOf(10), null)).build());
 
         Query range = Objects.requireNonNull(captureQuery().getQuery()).bool().filter().get(0);
         assertThat(range.range().number().gte()).isEqualTo(10.0);
@@ -210,9 +203,7 @@ class ElasticProductSearchClientTest {
     void addsRangeWithOnlyMax_whenMinIsNull() {
         givenSearchReturns();
 
-        client.search(null, ProductSearchItemDataBuilder.empty()
-                .priceRangeFilter(new PriceRangeFilter(null, BigDecimal.valueOf(100)))
-                .build());
+        client.search(null, ProductSearchItemDataBuilder.empty().priceRangeFilter(new PriceRangeFilter(null, BigDecimal.valueOf(100))).build());
 
         Query range = Objects.requireNonNull(captureQuery().getQuery()).bool().filter().get(0);
         assertThat(range.range().number().gte()).isNull();
@@ -223,9 +214,7 @@ class ElasticProductSearchClientTest {
     void noRange_whenBothBoundsNull() {
         givenSearchReturns();
 
-        client.search("laptop", ProductSearchItemDataBuilder.empty()
-                .priceRangeFilter(new PriceRangeFilter(null, null))
-                .build());
+        client.search("laptop", ProductSearchItemDataBuilder.empty().priceRangeFilter(new PriceRangeFilter(null, null)).build());
 
         assertThat(Objects.requireNonNull(captureQuery().getQuery()).bool().filter()).isEmpty();
     }
@@ -234,10 +223,7 @@ class ElasticProductSearchClientTest {
     @Test
     void addsOneNestedMustQueryPerAttribute() {
         givenSearchReturns();
-        AttributeFilter filter = new AttributeFilter(List.of(
-                new AttributeFilter.Attribute("color", List.of("red")),
-                new AttributeFilter.Attribute("size", List.of("M", "L"))
-        ));
+        AttributeFilter filter = new AttributeFilter(List.of(new AttributeFilter.Attribute("color", List.of("red")), new AttributeFilter.Attribute("size", List.of("M", "L"))));
 
         client.search(null, ProductSearchItemDataBuilder.empty().attributeFilter(filter).build());
 
@@ -253,9 +239,7 @@ class ElasticProductSearchClientTest {
     void skipsAttributes_whenListIsEmpty() {
         givenSearchReturns();
 
-        client.search(null, ProductSearchItemDataBuilder.empty()
-                .attributeFilter(new AttributeFilter(List.of()))
-                .build());
+        client.search(null, ProductSearchItemDataBuilder.empty().attributeFilter(new AttributeFilter(List.of())).build());
 
         NativeQuery nativeQuery = captureQuery();
         assertThat(nativeQuery.getQuery()).isNull();
@@ -288,9 +272,7 @@ class ElasticProductSearchClientTest {
     void usesProvidedFieldAndDirection() {
         givenSearchReturns();
 
-        client.search("laptop", ProductSearchItemDataBuilder.empty()
-                .sort(new SortBody(ProductSortField.PRICE, SortDirection.ASC))
-                .build());
+        client.search("laptop", ProductSearchItemDataBuilder.empty().sort(new SortBody(ProductSortField.PRICE, SortDirection.ASC)).build());
 
         SortOptions sort = captureQuery().getSortOptions().get(0);
         assertThat(sort.field().field()).isEqualTo("price");
@@ -301,9 +283,7 @@ class ElasticProductSearchClientTest {
     void defaultsDirectionToDesc_whenDirectionIsNull() {
         givenSearchReturns();
 
-        client.search("laptop", ProductSearchItemDataBuilder.empty()
-                .sort(new SortBody(ProductSortField.PRICE, null))
-                .build());
+        client.search("laptop", ProductSearchItemDataBuilder.empty().sort(new SortBody(ProductSortField.PRICE, null)).build());
 
         SortOptions sort = captureQuery().getSortOptions().get(0);
         assertThat(sort.field().field()).isEqualTo("price");
@@ -314,9 +294,7 @@ class ElasticProductSearchClientTest {
     void defaultsFieldToCreatedAt_whenSortByIsNull() {
         givenSearchReturns();
 
-        client.search("laptop", ProductSearchItemDataBuilder.empty()
-                .sort(new SortBody(null, SortDirection.ASC))
-                .build());
+        client.search("laptop", ProductSearchItemDataBuilder.empty().sort(new SortBody(null, SortDirection.ASC)).build());
 
         SortOptions sort = captureQuery().getSortOptions().get(0);
         assertThat(sort.field().field()).isEqualTo("createdAt");
@@ -361,22 +339,17 @@ class ElasticProductSearchClientTest {
     @SuppressWarnings("unchecked")
     private void givenSearchReturns(ElasticProductSearchItem... items) {
         SearchHits<ElasticProductSearchItem> hits = mock(SearchHits.class);
-        List<SearchHit<ElasticProductSearchItem>> hitList = Arrays.stream(items)
-                .map(item -> {
-                    SearchHit<ElasticProductSearchItem> hit = mock(SearchHit.class);
-                    when(hit.getContent()).thenReturn(item);
-                    return hit;
-                })
-                .toList();
+        List<SearchHit<ElasticProductSearchItem>> hitList = Arrays.stream(items).map(item -> {
+            SearchHit<ElasticProductSearchItem> hit = mock(SearchHit.class);
+            when(hit.getContent()).thenReturn(item);
+            return hit;
+        }).toList();
         when(hits.stream()).thenReturn(hitList.stream());
-        when(operations.search(any(org.springframework.data.elasticsearch.core.query.Query.class),
-                eq(ElasticProductSearchItem.class)))
-                .thenReturn(hits);
+        when(operations.search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class))).thenReturn(hits);
     }
 
     private NativeQuery captureQuery() {
-        ArgumentCaptor<org.springframework.data.elasticsearch.core.query.Query> captor =
-                ArgumentCaptor.forClass(org.springframework.data.elasticsearch.core.query.Query.class);
+        ArgumentCaptor<org.springframework.data.elasticsearch.core.query.Query> captor = ArgumentCaptor.forClass(org.springframework.data.elasticsearch.core.query.Query.class);
         verify(operations).search(captor.capture(), eq(ElasticProductSearchItem.class));
         return (NativeQuery) captor.getValue();
     }
