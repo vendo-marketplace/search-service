@@ -5,14 +5,12 @@ import com.vendo.search_service.adapter.product.in.dto.AttributeFilterRequest;
 import com.vendo.search_service.adapter.product.in.dto.AttributeFilterRequest.AttributeRequest;
 import com.vendo.search_service.adapter.product.in.dto.PriceRangeFilterRequest;
 import com.vendo.search_service.adapter.product.in.dto.ProductSearchRequest;
-import com.vendo.search_service.adapter.product.out.mapper.DtoProductMapper;
 import com.vendo.search_service.domain.product.Product;
 import com.vendo.search_service.domain.product.ProductSearchItem;
 import com.vendo.search_service.port.ProductSearchUseCase;
 import com.vendo.search_service.test_utils.ProductDataBuilder;
 import com.vendo.search_service.test_utils.ProductSearchItemDataBuilder;
 import com.vendo.search_service.test_utils.ProductSearchRequestDataBuilder;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +24,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -47,14 +45,6 @@ class ProductSearchControllerIntegrationTest {
     @MockitoBean
     private ProductSearchUseCase productSearchUseCase;
 
-    @MockitoBean
-    private DtoProductMapper mapper;
-
-    @BeforeEach
-    void setUp() {
-        reset(productSearchUseCase, mapper);
-    }
-
     @Nested
     class SearchTests {
 
@@ -64,12 +54,17 @@ class ProductSearchControllerIntegrationTest {
             ProductSearchItem item = ProductSearchItemDataBuilder.withAllFields().build();
             List<Product> products = List.of(ProductDataBuilder.withAllFields().id("p-1").build());
 
-            when(mapper.toSearchItem(any(ProductSearchRequest.class))).thenReturn(item);
-            when(productSearchUseCase.search(eq("laptop"), eq(item))).thenReturn(products);
+            when(productSearchUseCase.search("laptop", item)).thenReturn(products);
 
-            mockMvc.perform(post("/search").param("q", "laptop").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request))).andExpect(status().isOk()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$[0].id").value("p-1")).andExpect(jsonPath("$[0].title").value("Gaming Laptop"));
+            mockMvc.perform(post("/search")
+                            .param("q", "laptop")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$").isArray())
+                    .andExpect(jsonPath("$[0].id").value("p-1"))
+                    .andExpect(jsonPath("$[0].title").value("Gaming Laptop"));
 
-            verify(mapper).toSearchItem(any(ProductSearchRequest.class));
             verify(productSearchUseCase).search("laptop", item);
         }
 
@@ -78,59 +73,87 @@ class ProductSearchControllerIntegrationTest {
             ProductSearchRequest request = ProductSearchRequestDataBuilder.withAllFields().build();
             ProductSearchItem item = ProductSearchItemDataBuilder.withAllFields().build();
 
-            when(mapper.toSearchItem(any(ProductSearchRequest.class))).thenReturn(item);
-            when(productSearchUseCase.search(eq("laptop"), eq(item))).thenReturn(List.of());
+            when(productSearchUseCase.search("laptop", item)).thenReturn(List.of());
 
-            mockMvc.perform(post("/search").param("q", "laptop").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request))).andExpect(status().isOk()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$.length()").value(0));
+            mockMvc.perform(post("/search")
+                            .param("q", "laptop")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$").isArray())
+                    .andExpect(jsonPath("$.length()").value(0));
         }
 
         @Test
         void search_shouldReturnOk_whenNoQueryParamAndNoBody() throws Exception {
-            when(mapper.toSearchItem(isNull())).thenReturn(null);
             when(productSearchUseCase.search(isNull(), isNull())).thenReturn(List.of());
 
-            mockMvc.perform(post("/search")).andExpect(status().isOk());
+            mockMvc.perform(post("/search"))
+                    .andExpect(status().isOk());
 
             verify(productSearchUseCase).search(isNull(), isNull());
         }
     }
 
     @Test
-    void search_shouldReturnOk_whenMinPriceIsZero() throws Exception {
-        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty().priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.ZERO, null)).build();
-
-        ProductSearchItem item = ProductSearchItemDataBuilder.empty().build();
-        when(mapper.toSearchItem(any(ProductSearchRequest.class))).thenReturn(item);
-        when(productSearchUseCase.search(isNull(), eq(item))).thenReturn(List.of());
-
-        mockMvc.perform(post("/search").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
-
-        verify(productSearchUseCase).search(isNull(), eq(item));
-    }
-
-    @Test
     void search_shouldReturnBadRequest_whenMinPriceIsNegative() throws Exception {
-        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty().priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.valueOf(-1), null)).build();
+        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty()
+                .priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.valueOf(-1), null))
+                .build();
 
-        mockMvc.perform(post("/search").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request))).andExpect(status().isBadRequest());
+        mockMvc.perform(post("/search")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
 
         verifyNoInteractions(productSearchUseCase);
     }
 
     @Test
-    void search_shouldReturnBadRequest_whenAttributeIdIsNull() throws Exception {
-        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty().attributeFilter(new AttributeFilterRequest(List.of(new AttributeRequest(null, List.of("red"))))).build();
+    void search_shouldReturnOk_whenMinPriceIsZero() throws Exception {
+        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty()
+                .priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.ZERO, null))
+                .build();
+        ProductSearchItem item = ProductSearchItemDataBuilder.empty()
+                .priceRangeFilter(new com.vendo.search_service.domain.product.filter.PriceRangeFilter(BigDecimal.ZERO, null))
+                .build();
 
-        mockMvc.perform(post("/search").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request))).andExpect(status().isBadRequest());
+        when(productSearchUseCase.search(isNull(), eq(item))).thenReturn(List.of());
+
+        mockMvc.perform(post("/search")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        verify(productSearchUseCase).search(isNull(), eq(item));
+    }
+
+    @Test
+    void search_shouldReturnBadRequest_whenAttributeIdIsNull() throws Exception {
+        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty()
+                .attributeFilter(new AttributeFilterRequest(List.of(
+                        new AttributeRequest(null, List.of("red")))))
+                .build();
+
+        mockMvc.perform(post("/search")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
 
         verifyNoInteractions(productSearchUseCase);
     }
 
     @Test
     void search_shouldReturnBadRequest_whenAttributeValuesAreEmpty() throws Exception {
-        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty().attributeFilter(new AttributeFilterRequest(List.of(new AttributeRequest("color", List.of())))).build();
+        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty()
+                .attributeFilter(new AttributeFilterRequest(List.of(
+                        new AttributeRequest("color", List.of()))))
+                .build();
 
-        mockMvc.perform(post("/search").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request))).andExpect(status().isBadRequest());
+        mockMvc.perform(post("/search")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
 
         verifyNoInteractions(productSearchUseCase);
     }
