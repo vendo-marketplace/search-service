@@ -6,10 +6,14 @@ import com.vendo.search_service.domain.product.filter.PriceRangeFilter;
 import com.vendo.search_service.domain.product.sort.ProductSortField;
 import com.vendo.search_service.domain.product.sort.SortBody;
 import com.vendo.search_service.domain.product.sort.SortDirection;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+@Setter
+@Accessors(fluent = true, chain = true)
 public class ProductSearchItemDataBuilder {
 
     private String categoryId;
@@ -25,42 +29,16 @@ public class ProductSearchItemDataBuilder {
     }
 
     public static ProductSearchItemDataBuilder withAllFields() {
-        return new ProductSearchItemDataBuilder().categoryId("category-1").active(true).sort(new SortBody(ProductSortField.PRICE, SortDirection.ASC)).attributeFilter(new AttributeFilter(List.of(new AttributeFilter.Attribute("color", List.of("red", "blue"))))).priceRangeFilter(new PriceRangeFilter(BigDecimal.TEN, BigDecimal.valueOf(100))).size(20).page(0);
-    }
-
-    public ProductSearchItemDataBuilder categoryId(String categoryId) {
-        this.categoryId = categoryId;
-        return this;
-    }
-
-    public ProductSearchItemDataBuilder active(Boolean active) {
-        this.active = active;
-        return this;
-    }
-
-    public ProductSearchItemDataBuilder sort(SortBody sort) {
-        this.sort = sort;
-        return this;
-    }
-
-    public ProductSearchItemDataBuilder attributeFilter(AttributeFilter attributeFilter) {
-        this.attributeFilter = attributeFilter;
-        return this;
-    }
-
-    public ProductSearchItemDataBuilder priceRangeFilter(PriceRangeFilter priceRangeFilter) {
-        this.priceRangeFilter = priceRangeFilter;
-        return this;
-    }
-
-    public ProductSearchItemDataBuilder size(Integer size) {
-        this.size = size;
-        return this;
-    }
-
-    public ProductSearchItemDataBuilder page(Integer page) {
-        this.page = page;
-        return this;
+        return new ProductSearchItemDataBuilder()
+                .categoryId("category-1")
+                .active(true)
+                .sort(new SortBody(ProductSortField.PRICE, SortDirection.ASC))
+                .attributeFilter(new AttributeFilter(List.of(
+                        new AttributeFilter.Attribute("color", List.of("red", "blue"))
+                )))
+                .priceRangeFilter(new PriceRangeFilter(BigDecimal.TEN, BigDecimal.valueOf(100)))
+                .size(20)
+                .page(0);
     }
 
     public ProductSearchItem build() {

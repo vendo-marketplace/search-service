@@ -7,10 +7,14 @@ import com.vendo.search_service.adapter.product.in.dto.ProductSearchRequest;
 import com.vendo.search_service.domain.product.sort.ProductSortField;
 import com.vendo.search_service.domain.product.sort.SortBody;
 import com.vendo.search_service.domain.product.sort.SortDirection;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+@Setter
+@Accessors(fluent = true, chain = true)
 public class ProductSearchRequestDataBuilder {
 
     private String categoryId;
@@ -26,42 +30,16 @@ public class ProductSearchRequestDataBuilder {
     }
 
     public static ProductSearchRequestDataBuilder withAllFields() {
-        return new ProductSearchRequestDataBuilder().categoryId("category-1").active(true).sort(new SortBody(ProductSortField.PRICE, SortDirection.ASC)).attributeFilter(new AttributeFilterRequest(List.of(new AttributeRequest("color", List.of("red", "blue"))))).priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.TEN, BigDecimal.valueOf(100))).size(20).page(0);
-    }
-
-    public ProductSearchRequestDataBuilder categoryId(String categoryId) {
-        this.categoryId = categoryId;
-        return this;
-    }
-
-    public ProductSearchRequestDataBuilder active(Boolean active) {
-        this.active = active;
-        return this;
-    }
-
-    public ProductSearchRequestDataBuilder sort(SortBody sort) {
-        this.sort = sort;
-        return this;
-    }
-
-    public ProductSearchRequestDataBuilder attributeFilter(AttributeFilterRequest attributeFilter) {
-        this.attributeFilter = attributeFilter;
-        return this;
-    }
-
-    public ProductSearchRequestDataBuilder priceRangeFilter(PriceRangeFilterRequest priceRangeFilter) {
-        this.priceRangeFilter = priceRangeFilter;
-        return this;
-    }
-
-    public ProductSearchRequestDataBuilder size(Integer size) {
-        this.size = size;
-        return this;
-    }
-
-    public ProductSearchRequestDataBuilder page(Integer page) {
-        this.page = page;
-        return this;
+        return new ProductSearchRequestDataBuilder()
+                .categoryId("category-1")
+                .active(true)
+                .sort(new SortBody(ProductSortField.PRICE, SortDirection.ASC))
+                .attributeFilter(new AttributeFilterRequest(List.of(
+                        new AttributeRequest("color", List.of("red", "blue"))
+                )))
+                .priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.TEN, BigDecimal.valueOf(100)))
+                .size(20)
+                .page(0);
     }
 
     public ProductSearchRequest build() {
