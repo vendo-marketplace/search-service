@@ -8,12 +8,12 @@ import com.vendo.search_service.domain.product.ProductSearchItem;
 import com.vendo.search_service.domain.product.filter.AttributeFilter;
 import com.vendo.search_service.domain.product.sort.ProductSortField;
 import com.vendo.search_service.domain.product.sort.SortBody;
-import com.vendo.search_service.domain.product.sort.SortDirection;
 import com.vendo.utils_lib.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -177,9 +177,14 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
     }
 
     private List<ElasticProductSearchItem> search(NativeQueryBuilder queryBuilder) {
-        return operations.search(queryBuilder.build(), ElasticProductSearchItem.class).stream()
-                .map(SearchHit::getContent)
-                .toList();
+        try {
+            return operations.search(queryBuilder.build(), ElasticProductSearchItem.class).stream()
+                    .map(SearchHit::getContent)
+                    .toList();
+        } catch (NoSuchIndexException e) {
+            log.warn("Search index not found (Elastic restarted/unavailable), returning empty list. Reason: {}", e.getMessage());
+            return List.of();
+        }
     }
 
     private int getPage(ProductSearchItem searchItem) {
