@@ -11,15 +11,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController("/products")
+@RestController
 @RequiredArgsConstructor
+@RequestMapping("/search")
 class ProductSearchController {
 
     private final ProductSearchUseCase productSearchUseCase;
 
     private final DtoProductMapper mapper;
 
-    @PostMapping("/search")
+    @PostMapping
     ResponseEntity<List<Product>> search(
             @RequestParam(required = false) String q,
             @Valid @RequestBody(required = false) ProductSearchRequest request
