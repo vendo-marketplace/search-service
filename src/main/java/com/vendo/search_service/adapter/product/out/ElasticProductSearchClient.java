@@ -4,6 +4,7 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.vendo.core_lib.utils.StringUtils;
+import com.vendo.search_service.domain.product.exception.InternalSearchException;
 import com.vendo.search_service.adapter.search.SearchRepository;
 import com.vendo.search_service.domain.product.ProductSearchItem;
 import com.vendo.search_service.domain.product.filter.AttributeFilter;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
+import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -184,6 +186,12 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         } catch (NoSuchIndexException e) {
             log.warn("Search index not found (Elastic restarted/unavailable), returning empty list. Reason: {}", e.getMessage());
             return List.of();
+        } catch (UncategorizedElasticsearchException e) {
+            log.warn("Uncategorized exception occurred, returning empty list.", e);
+            return List.of();
+        } catch (Exception e) {
+            log.error("Internal search exception occurred: {}.", e.getMessage());
+            throw new InternalSearchException("Internal search error.");
         }
     }
 
