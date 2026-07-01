@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ProductSearchExceptionHandler {
 
     @ExceptionHandler(InternalSearchException.class)
-    public ResponseEntity<ExceptionResponse> handleProductSearchException(InternalSearchException e, HttpServletRequest request) {
+    public ResponseEntity<ExceptionResponse> handleInternalSearchException(InternalSearchException e, HttpServletRequest request) {
         ExceptionResponse exceptionResponse = ExceptionResponse.builder()
                 .message(e.getMessage())
                 .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
