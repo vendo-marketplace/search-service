@@ -4,4 +4,8 @@ public class InternalSearchException extends RuntimeException {
     public InternalSearchException(String message) {
         super(message);
     }
+
+    public InternalSearchException(Throwable cause) {
+        super(cause);
+    }
 }

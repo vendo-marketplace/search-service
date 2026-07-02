@@ -189,8 +189,7 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
             log.warn("Elasticsearch internal exception, returning empty list. Reason: ", e);
             return List.of();
         } catch (UncategorizedElasticsearchException | ResourceNotFoundException | ResourceFailureException e) {
-            log.error("Internal search exception occurred. Reason: ", e);
-            throw new InternalSearchException("Internal search error.");
+            throw new InternalSearchException(e);
         }
     }
 
