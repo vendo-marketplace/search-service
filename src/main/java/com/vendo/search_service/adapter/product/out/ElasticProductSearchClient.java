@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
+import org.springframework.data.elasticsearch.ResourceFailureException;
+import org.springframework.data.elasticsearch.ResourceNotFoundException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
@@ -184,13 +186,10 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
                     .map(SearchHit::getContent)
                     .toList();
         } catch (NoSuchIndexException e) {
-            log.warn("Search index not found (Elastic restarted/unavailable), returning empty list. Reason: {}", e.getMessage());
+            log.warn("Elasticsearch internal exception, returning empty list. Reason: ", e);
             return List.of();
-        } catch (UncategorizedElasticsearchException e) {
-            log.warn("Uncategorized exception occurred, returning empty list.", e);
-            return List.of();
-        } catch (Exception e) {
-            log.error("Internal search exception occurred: {}.", e.getMessage());
+        } catch (UncategorizedElasticsearchException | ResourceNotFoundException | ResourceFailureException e) {
+            log.error("Internal search exception occurred. Reason: ", e);
             throw new InternalSearchException("Internal search error.");
         }
     }
