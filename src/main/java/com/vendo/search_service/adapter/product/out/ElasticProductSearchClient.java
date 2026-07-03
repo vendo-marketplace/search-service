@@ -50,7 +50,6 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
     @Override
     public List<ElasticProductSearchItem> search(String q, ProductSearchItem searchItem) {
         NativeQueryBuilder queryBuilder = NativeQuery.builder();
-
         List<Query> must = new ArrayList<>(), filters = new ArrayList<>();
 
         textQuery(q).ifPresent(must::add);
@@ -63,11 +62,15 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         queryBuilder.withSort(s -> s.field(f -> f.field(sortOptions.sortField()).order(sortOptions.order)));
         queryBuilder.withPageable(pageable(searchItem));
 
-        queryBuilder.withQuery(qb -> qb.bool(b -> {
-            if (!must.isEmpty()) b.must(must);
-            if (!filters.isEmpty()) b.filter(filters);
-            return b;
-        }));
+        if (must.isEmpty() && filters.isEmpty()) {
+            queryBuilder.withQuery(qb -> qb.matchAll(ma -> ma));
+        } else {
+            queryBuilder.withQuery(qb -> qb.bool(b -> {
+                if (!must.isEmpty()) b.must(must);
+                if (!filters.isEmpty()) b.filter(filters);
+                return b;
+            }));
+        }
 
         return search(queryBuilder);
     }
