@@ -56,7 +56,7 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         categoryQuery(searchItem).ifPresent(filters::add);
         activeQuery(searchItem).ifPresent(filters::add);
         priceQuery(searchItem).ifPresent(filters::add);
-        attributesQuery(searchItem).ifPresent(filters::add);
+        attributesQuery(searchItem).ifPresent(filters::addAll);
 
         SortOptions sortOptions = sort(searchItem);
         queryBuilder.withSort(s -> s.field(f -> f.field(sortOptions.sortField()).order(sortOptions.order)));
@@ -135,27 +135,25 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         }
 
         Query query = Query.of(builder -> builder
-                .bool(b -> b
-                        .filter(f -> f
-                                .range(r -> r
-                                        .number(n -> {
-                                            n.field(PRICE);
+                .range(r -> r
+                        .number(n -> {
+                            n.field(PRICE);
 
-                                            if (min != null) {
-                                                n.gte(min.doubleValue());
-                                            }
+                            if (min != null) {
+                                n.gte(min.doubleValue());
+                            }
 
-                                            if (max != null) {
-                                                n.lte(max.doubleValue());
-                                            }
+                            if (max != null) {
+                                n.lte(max.doubleValue());
+                            }
 
-                                            return n;
-                                        })))));
+                            return n;
+                        })));
 
         return Optional.of(query);
     }
 
-    private Optional<Query> attributesQuery(ProductSearchItem searchItem) {
+    private Optional<List<Query>> attributesQuery(ProductSearchItem searchItem) {
         if (searchItem == null || searchItem.attributeFilter() == null) {
             return Optional.empty();
         }
@@ -166,36 +164,23 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
             return Optional.empty();
         }
 
-        List<Query> nestedQueries = filter.attributes().stream()
-                .map(attribute -> Query.of(q -> q
-                        .nested(n -> n
-                                .path(ATTRIBUTES)
-                                .query(nq -> nq
-                                        .bool(b -> b
-                                                .must(m -> m.term(t -> t
-                                                        .field(ATTRIBUTES_ID)
-                                                        .value(attribute.id())
-                                                ))
-                                                .must(m -> m.terms(t -> t
-                                                        .field(ATTRIBUTES_VALUES)
-                                                        .terms(ts -> ts.value(
-                                                                attribute.values()
-                                                                        .stream()
-                                                                        .map(FieldValue::of)
-                                                                        .toList()
-                                                        ))
-                                                ))
-                                        )
-                                )
-                        )
-                ))
-                .toList();
+        List<Query> queries = filter.attributes().stream().map(attribute -> Query.of(q -> q.nested(n -> n
+                .path(ATTRIBUTES)
+                .query(nq -> nq
+                        .bool(b -> b
+                                .must(m -> m.term(t -> t
+                                        .field(ATTRIBUTES_ID)
+                                        .value(attribute.id())))
+                                .must(m -> m.terms(t -> t
+                                        .field(ATTRIBUTES_VALUES)
+                                        .terms(ts -> ts.value(
+                                                attribute.values()
+                                                        .stream()
+                                                        .map(FieldValue::of)
+                                                        .toList()))))))))
+        ).toList();
 
-        return Optional.of(
-                Query.of(q -> q
-                        .bool(b -> b.filter(nestedQueries))
-                )
-        );
+        return Optional.of(queries);
     }
 
     private PageRequest pageable(ProductSearchItem searchItem) {
