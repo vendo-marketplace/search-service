@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class  ProductSearchFields {
+public final class ProductSearchFields {
 
     public static final String TITLE = "title";
     public static final String DESCRIPTION = "description";
@@ -15,5 +15,11 @@ public class  ProductSearchFields {
     public static final String ATTRIBUTES = "attributes";
     public static final String ATTRIBUTES_ID = ATTRIBUTES + ".id";
     public static final String ATTRIBUTES_VALUES = ATTRIBUTES + ".values";
+
+    private static final String PRIORITY_PREFIX = "^";
+
+    public static String withPriority(String field, int priority) {
+        return field + PRIORITY_PREFIX + priority;
+    }
 
 }

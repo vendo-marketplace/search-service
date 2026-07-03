@@ -4,6 +4,7 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.vendo.core_lib.utils.StringUtils;
+import com.vendo.search_service.adapter.product.out.constants.ProductSearchFields;
 import com.vendo.search_service.domain.product.exception.InternalSearchException;
 import com.vendo.search_service.adapter.search.SearchRepository;
 import com.vendo.search_service.domain.product.ProductSearchItem;
@@ -37,7 +38,6 @@ import static com.vendo.search_service.adapter.product.out.constants.ProductSear
 public class ElasticProductSearchClient implements SearchRepository<ElasticProductSearchItem, ProductSearchItem> {
 
     private static final String FUZZINESS_MODE = "AUTO";
-    private static final String FIELD_PRIORITY = "^3";
 
     private final ElasticsearchOperations operations;
 
@@ -90,7 +90,7 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
                         .should(s -> s
                                 .multiMatch(mm -> mm
                                         .query(q)
-                                        .fields(TITLE + FIELD_PRIORITY, DESCRIPTION)
+                                        .fields(ProductSearchFields.withPriority(TITLE, 3), DESCRIPTION)
                                         .fuzziness(FUZZINESS_MODE)))));
 
         return Optional.of(query);
@@ -102,10 +102,9 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         }
 
         Query query = Query.of(builder -> builder
-                .bool(b -> b
-                        .filter(f -> f
-                                .term(t -> t
-                                        .field(CATEGORY_ID).value(searchItem.categoryId())))));
+                .term(t -> t
+                        .field(CATEGORY_ID)
+                        .value(searchItem.categoryId())));
 
         return Optional.of(query);
     }
@@ -116,10 +115,9 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         }
 
         Query query = Query.of(builder -> builder
-                .bool(b -> b
-                        .filter(f -> f
-                                .term(t -> t
-                                        .field(ACTIVE).value(searchItem.active())))));
+                .term(t -> t
+                        .field(ACTIVE)
+                        .value(searchItem.active())));
 
         return Optional.of(query);
     }
@@ -150,7 +148,8 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
                                             if (max != null) {
                                                 n.lte(max.doubleValue());
                                             }
-                                             return n;
+
+                                            return n;
                                         })))));
 
         return Optional.of(query);
@@ -231,11 +230,15 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
     }
 
     private int getPage(ProductSearchItem searchItem) {
-        return (searchItem != null && searchItem.page() != null) ? searchItem.page() : DEFAULT_PAGE;
+        return (searchItem != null && searchItem.page() != null)
+                ? searchItem.page()
+                : DEFAULT_PAGE;
     }
 
     private int getSize(ProductSearchItem searchItem) {
-        return (searchItem != null && searchItem.size() != null) ? searchItem.size() : DEFAULT_SIZE;
+        return (searchItem != null && searchItem.size() != null)
+                ? searchItem.size()
+                : DEFAULT_SIZE;
     }
 
     private record SortOptions(String sortField, SortOrder order) {}

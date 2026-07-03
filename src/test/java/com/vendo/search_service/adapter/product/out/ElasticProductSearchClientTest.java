@@ -2,7 +2,11 @@ package com.vendo.search_service.adapter.product.out;
 
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchPhraseQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import com.vendo.search_service.adapter.product.out.constants.ProductSearchFields;
+import com.vendo.search_service.domain.product.ProductSearchItem;
+import com.vendo.search_service.domain.product.exception.InternalSearchException;
 import com.vendo.search_service.domain.product.filter.AttributeFilter;
 import com.vendo.search_service.domain.product.filter.PriceRangeFilter;
 import com.vendo.search_service.domain.product.sort.ProductSortField;
@@ -20,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
+import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
@@ -31,7 +36,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import static com.vendo.search_service.adapter.product.out.constants.ProductSearchFields.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -55,7 +62,7 @@ class ElasticProductSearchClientTest {
     }
 
     @Test
-    void search_shouldMapSearchHitsToContent() {
+    void search_shouldReturnProducts() {
         ElasticProductSearchItem item1 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-1").build();
         ElasticProductSearchItem item2 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-2").build();
         givenSearchReturns(item1, item2);
@@ -84,93 +91,143 @@ class ElasticProductSearchClientTest {
         assertThat(result).isEmpty();
     }
 
-
     @Test
-    void buildsBoolWithTwoShoulds_whenQueryProvided() {
+    void search_shouldThrowInternalSearchException_whenUncategorizedElasticsearchExceptionThrown() {
+        when(operations.search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class))).thenThrow(new UncategorizedElasticsearchException("uncategorized"));
+
+        assertThatThrownBy(() -> client.search("laptop", null))
+                .isInstanceOf(InternalSearchException.class);
+    }
+
+
+    /**
+     * Duplicate nested bool is not a bug here. It is necessary because Elastic
+     * will ignore SHOULD when there is at least one of these queries in the root: filter, must.
+     * In this case search by text is always prioritized so we can't allow it to be ignored.
+     */
+    @Test
+    void search_buildsBoolWithTwoShould_whenOnlyQueryProvided() {
         givenSearchReturns();
 
         client.search("laptop", null);
 
         Query query = captureQuery().getQuery();
+
         assertThat(query).isNotNull();
         assertThat(query.isBool()).isTrue();
-        assertThat(query.bool().should()).hasSize(2);
+
+        assertThat(query.bool().must()).isNotEmpty();
+        assertThat(query.bool().must()).hasSize(1);
+
+        assertThat(query.bool().must().get(0).isBool()).isTrue();
+
+        assertThat(query.bool().must().get(0).bool().should()).isNotNull();
+        assertThat(query.bool().must().get(0).bool().should()).isNotEmpty();
+        assertThat(query.bool().must().get(0).bool().should()).hasSize(2);
+
+        Query matchPhraseQuery = query.bool().must().get(0).bool().should().get(0);
+        assertThat(matchPhraseQuery.isMatchPhrase()).isTrue();
+        assertThat(matchPhraseQuery.matchPhrase().field()).isEqualTo(TITLE);
+
+        Query multiMatchQuery = query.bool().must().get(0).bool().should().get(1);
+        assertThat(multiMatchQuery.isMultiMatch()).isTrue();
+        assertThat(multiMatchQuery.multiMatch().fields()).isNotEmpty();
+        assertThat(multiMatchQuery.multiMatch().fields()).hasSize(2);
+        assertThat(multiMatchQuery.multiMatch().fields().get(0)).isEqualTo(ProductSearchFields.withPriority(TITLE, 3));
+        assertThat(multiMatchQuery.multiMatch().fields().get(1)).isEqualTo(DESCRIPTION);
     }
 
     @Test
-    void usesMatchAllFilter_whenQueryIsBlank() {
+    void search_shouldMatchAllFilter_whenQueryIsBlank_andNoFilters() {
         givenSearchReturns();
 
         client.search("", null);
 
-        NativeQuery nativeQuery = captureQuery();
-        assertThat(nativeQuery.getQuery()).isNull();
-        assertThat(nativeQuery.getFilter()).isNotNull();
-        assertThat(nativeQuery.getFilter().isMatchAll()).isTrue();
+        Query query = captureQuery().getQuery();
+
+        assertThat(query).isNotNull();
+        assertThat(query.isMatchAll()).isTrue();
     }
 
     @Test
-    void usesMatchAllFilter_whenQueryIsNull() {
+    void search_shouldMatchAllFilter_whenQueryIsNull() {
         givenSearchReturns();
 
         client.search(null, null);
 
-        assertThat(Objects.requireNonNull(captureQuery().getFilter()).isMatchAll()).isTrue();
+        Query query = captureQuery().getQuery();
+
+        assertThat(query).isNotNull();
+        assertThat(query.isMatchAll()).isTrue();
     }
 
 
     @Test
-    void addsTermFilter_whenCategoryProvided() {
+    void search_addsTermFilter_whenCategoryProvided() {
+        givenSearchReturns();
+        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().categoryId("id").build();
+
+        client.search(null, searchItem);
+
+        Query query = captureQuery().getQuery();
+
+        assertThat(query).isNotNull();
+        assertThat(query.isBool()).isTrue();
+        assertThat(query.bool().filter()).isNotEmpty();
+        assertThat(query.bool().filter()).hasSize(1);
+        assertThat(query.bool().filter().get(0).isTerm()).isTrue();
+        assertThat(query.bool().filter().get(0).term().field()).isEqualTo(CATEGORY_ID);
+        assertThat(query.bool().filter().get(0).term().value().stringValue()).isEqualTo(searchItem.categoryId());
+    }
+
+    @Test
+    void search_shouldNotIncludeFilter_whenFilterIsEmpty() {
         givenSearchReturns();
 
-        client.search(null, ProductSearchItemDataBuilder.empty().categoryId("cat-7").build());
+        client.search(null, ProductSearchItemDataBuilder.empty().build());
 
-        Query filter = captureQuery().getFilter();
-        Assertions.assertNotNull(filter);
-        assertThat(filter.isTerm()).isTrue();
-        assertThat(filter.term().field()).isEqualTo("categoryId");
-        assertThat(filter.term().value().stringValue()).isEqualTo("cat-7");
+        Query query = captureQuery().getQuery();
+
+        assertThat(query).isNotNull();
+        assertThat(query.isBool()).isFalse();
     }
 
     @Test
-    void noCategoryTerm_whenCategoryIsNull() {
-        givenSearchReturns();
-
-        client.search("laptop", ProductSearchItemDataBuilder.empty().build());
-
-        assertThat(captureQuery().getFilter()).isNull();
-    }
-
-
-    @Test
-    void addsTermFilter_whenActiveIsTrue() {
+    void search_addsTermFilter_whenActiveIsTrue() {
         givenSearchReturns();
 
         client.search(null, ProductSearchItemDataBuilder.empty().active(true).build());
 
-        Query filter = captureQuery().getFilter();
-        Assertions.assertNotNull(filter);
-        assertThat(filter.isTerm()).isTrue();
-        assertThat(filter.term().field()).isEqualTo("active");
-        assertThat(filter.term().value().booleanValue()).isTrue();
+        Query query = captureQuery().getQuery();
+
+        assertThat(query).isNotNull();
+        assertThat(query.isBool()).isTrue();
+        assertThat(query.bool().filter()).isNotEmpty();
+        assertThat(query.bool().filter()).hasSize(1);
+        assertThat(query.bool().filter().get(0).isTerm()).isTrue();
+        assertThat(query.bool().filter().get(0).term().field()).isEqualTo(ACTIVE);
+        assertThat(query.bool().filter().get(0).term().value().booleanValue()).isTrue();
     }
 
     @Test
-    void addsTermFilter_whenActiveIsFalse() {
+    void search_addsTermFilter_whenActiveIsFalse() {
         givenSearchReturns();
 
         client.search(null, ProductSearchItemDataBuilder.empty().active(false).build());
 
-        Query filter = captureQuery().getFilter();
-        Assertions.assertNotNull(filter);
-        assertThat(filter.isTerm()).isTrue();
-        assertThat(filter.term().field()).isEqualTo("active");
-        assertThat(filter.term().value().booleanValue()).isFalse();
+        Query query = captureQuery().getQuery();
+
+        assertThat(query).isNotNull();
+        assertThat(query.isBool()).isTrue();
+        assertThat(query.bool().filter()).isNotEmpty();
+        assertThat(query.bool().filter()).hasSize(1);
+        assertThat(query.bool().filter().get(0).isTerm()).isTrue();
+        assertThat(query.bool().filter().get(0).term().field()).isEqualTo(ACTIVE);
+        assertThat(query.bool().filter().get(0).term().value().booleanValue()).isFalse();
     }
 
-
     @Test
-    void addsRangeWithMinAndMax_whenBothProvided() {
+    void search_addsRangeWithMinAndMax_whenBothProvided() {
         givenSearchReturns();
 
         client.search(null, ProductSearchItemDataBuilder.empty().priceRangeFilter(new PriceRangeFilter(BigDecimal.valueOf(10), BigDecimal.valueOf(100))).build());
