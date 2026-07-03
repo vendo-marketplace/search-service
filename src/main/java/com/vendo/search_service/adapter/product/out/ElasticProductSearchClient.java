@@ -25,6 +25,7 @@ import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,141 +51,174 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
     public List<ElasticProductSearchItem> search(String q, ProductSearchItem searchItem) {
         NativeQueryBuilder queryBuilder = NativeQuery.builder();
 
-        withQuery(q, queryBuilder);
-        withPageable(PageRequest.of(getPage(searchItem), getSize(searchItem)), queryBuilder);
-        withSort(searchItem, queryBuilder);
+        List<Query> must = new ArrayList<>(), filters = new ArrayList<>();
 
-        withCategoryId(searchItem, queryBuilder);
-        withActive(searchItem, queryBuilder);
-        withPrice(searchItem, queryBuilder);
-        withAttributes(searchItem, queryBuilder);
+        textQuery(q).ifPresent(must::add);
+        categoryQuery(searchItem).ifPresent(filters::add);
+        activeQuery(searchItem).ifPresent(filters::add);
+        priceQuery(searchItem).ifPresent(filters::add);
+        attributesQuery(searchItem).ifPresent(filters::add);
+
+        SortOptions sortOptions = sort(searchItem);
+        queryBuilder.withSort(s -> s.field(f -> f.field(sortOptions.sortField()).order(sortOptions.order)));
+        queryBuilder.withPageable(pageable(searchItem));
+
+        queryBuilder.withQuery(qb -> qb.bool(b -> {
+            if (!must.isEmpty()) b.must(must);
+            if (!filters.isEmpty()) b.filter(filters);
+            return b;
+        }));
 
         return search(queryBuilder);
     }
 
-    private void withPageable(PageRequest page, NativeQueryBuilder queryBuilder) {
-        queryBuilder.withPageable(page);
-    }
-
-    private void withQuery(String q, NativeQueryBuilder queryBuilder) {
-        if (!StringUtils.isEmpty(q)) {
-            queryBuilder.withQuery(query -> query
-                    .bool(b -> b
-                            .should(s -> s
-                                    .matchPhrase(ph -> ph
-                                            .field(TITLE)
-                                            .query(q)
-                                            .boost(10f)
-                                    )
-                            )
-                            .should(s -> s.multiMatch(m -> m
-                                            .query(q)
-                                            .fields(TITLE + FIELD_PRIORITY, DESCRIPTION)
-                                            .fuzziness(FUZZINESS_MODE)
-                                    )
-                            )
-                    )
-            );
-        } else {
-            queryBuilder.withFilter(query -> query.matchAll(m -> m));
+    private Optional<Query> textQuery(String q) {
+        if (StringUtils.isEmpty(q)) {
+            return Optional.empty();
         }
+
+        Query query = Query.of(builder -> builder
+                .bool(b -> b
+                        .should(s -> s
+                                .matchPhrase(mp -> mp
+                                        .field(TITLE)
+                                        .query(q)
+                                        .boost(10f)))
+                        .should(s -> s
+                                .multiMatch(mm -> mm
+                                        .query(q)
+                                        .fields(TITLE + FIELD_PRIORITY, DESCRIPTION)
+                                        .fuzziness(FUZZINESS_MODE)))));
+
+        return Optional.of(query);
     }
 
-    private void withSort(ProductSearchItem searchItem, NativeQueryBuilder queryBuilder) {
-        SortBody sort =
-                searchItem != null
-                        ? searchItem.sort()
-                        : null;
+    private Optional<Query> categoryQuery(ProductSearchItem searchItem) {
+        if (searchItem == null || StringUtils.isEmpty(searchItem.categoryId())) {
+            return Optional.empty();
+        }
 
-        ProductSortField sortField =
-                sort != null && sort.sortBy() != null
-                        ? sort.sortBy()
-                        : ProductSortField.CREATED_AT;
+        Query query = Query.of(builder -> builder
+                .bool(b -> b
+                        .filter(f -> f
+                                .term(t -> t
+                                        .field(CATEGORY_ID).value(searchItem.categoryId())))));
 
-        SortOrder order =
-                sort != null && sort.direction() != null
-                        ? SortOrder.valueOf(sort.direction().getDirection())
-                        : SortOrder.Desc;
+        return Optional.of(query);
+    }
 
-        queryBuilder.withSort(s -> s
-                .field(f -> f
-                        .field(sortField.getField())
-                        .order(order)
+    private Optional<Query> activeQuery(ProductSearchItem searchItem) {
+        if (searchItem == null || searchItem.active() == null) {
+            return Optional.empty();
+        }
+
+        Query query = Query.of(builder -> builder
+                .bool(b -> b
+                        .filter(f -> f
+                                .term(t -> t
+                                        .field(ACTIVE).value(searchItem.active())))));
+
+        return Optional.of(query);
+    }
+
+    private Optional<Query> priceQuery(ProductSearchItem searchItem) {
+        if (searchItem == null || searchItem.priceRangeFilter() == null) {
+            return Optional.empty();
+        }
+
+        BigDecimal min = searchItem.priceRangeFilter().minPrice();
+        BigDecimal max = searchItem.priceRangeFilter().maxPrice();
+
+        if (min == null && max == null) {
+            return Optional.empty();
+        }
+
+        Query query = Query.of(builder -> builder
+                .bool(b -> b
+                        .filter(f -> f
+                                .range(r -> r
+                                        .number(n -> {
+                                            n.field(PRICE);
+
+                                            if (min != null) {
+                                                n.gte(min.doubleValue());
+                                            }
+
+                                            if (max != null) {
+                                                n.lte(max.doubleValue());
+                                            }
+                                             return n;
+                                        })))));
+
+        return Optional.of(query);
+    }
+
+    private Optional<Query> attributesQuery(ProductSearchItem searchItem) {
+        if (searchItem == null || searchItem.attributeFilter() == null) {
+            return Optional.empty();
+        }
+
+        AttributeFilter filter = searchItem.attributeFilter();
+
+        if (filter.attributes().isEmpty()) {
+            return Optional.empty();
+        }
+
+        List<Query> nestedQueries = filter.attributes().stream()
+                .map(attribute -> Query.of(q -> q
+                        .nested(n -> n
+                                .path(ATTRIBUTES)
+                                .query(nq -> nq
+                                        .bool(b -> b
+                                                .must(m -> m.term(t -> t
+                                                        .field(ATTRIBUTES_ID)
+                                                        .value(attribute.id())
+                                                ))
+                                                .must(m -> m.terms(t -> t
+                                                        .field(ATTRIBUTES_VALUES)
+                                                        .terms(ts -> ts.value(
+                                                                attribute.values()
+                                                                        .stream()
+                                                                        .map(FieldValue::of)
+                                                                        .toList()
+                                                        ))
+                                                ))
+                                        )
+                                )
+                        )
+                ))
+                .toList();
+
+        return Optional.of(
+                Query.of(q -> q
+                        .bool(b -> b.filter(nestedQueries))
                 )
         );
     }
 
-    private void withAttributes(ProductSearchItem searchItem, NativeQueryBuilder queryBuilder) {
-        if (searchItem == null || searchItem.attributeFilter() == null) return;
-
-        AttributeFilter filter = searchItem.attributeFilter();
-        if (filter.attributes().isEmpty()) {
-            return;
-        }
-
-        List<Query> attributeQueries = filter.attributes().stream().map(attribute -> new Query.Builder().nested(n -> n
-                .path(ATTRIBUTES)
-                .query(q -> q.bool(b -> b
-                        .must(m -> m.term(t -> t
-                                .field(ATTRIBUTES_ID)
-                                .value(FieldValue.of(attribute.id()))
-                        ))
-                        .must(m -> m.terms(t -> t
-                                .field(ATTRIBUTES_VALUES)
-                                .terms(ts -> ts.value(
-                                        attribute.values()
-                                                .stream()
-                                                .map(FieldValue::of)
-                                                .toList()
-                                ))
-                        ))
-                ))).build()).toList();
-
-        queryBuilder.withQuery(q -> q.bool(b -> b
-                .must(attributeQueries)
-        ));
+    private PageRequest pageable(ProductSearchItem searchItem) {
+        return PageRequest.of(getPage(searchItem), getSize(searchItem));
     }
 
-    private void withCategoryId(ProductSearchItem searchItem, NativeQueryBuilder queryBuilder) {
-        if (searchItem != null && !StringUtils.isEmpty(searchItem.categoryId())) {
-            queryBuilder.withFilter(query -> query.term(t -> t.field(CATEGORY_ID).value(v -> v.stringValue(searchItem.categoryId()))));
-        }
-    }
+    private SortOptions sort(ProductSearchItem searchItem) {
+        SortBody sort = searchItem != null
+                ? searchItem.sort()
+                : null;
 
-    private void withActive(ProductSearchItem searchItem, NativeQueryBuilder queryBuilder) {
-        if (searchItem != null && Optional.ofNullable(searchItem.active()).isPresent()) {
-            queryBuilder.withFilter(f -> f.term(t -> t.field(ACTIVE).value(searchItem.active())));
-        }
-    }
+        ProductSortField sortField = sort != null && sort.sortBy() != null ?
+                sort.sortBy() :
+                ProductSortField.CREATED_AT;
 
-    private void withPrice(ProductSearchItem searchItem, NativeQueryBuilder queryBuilder) {
-        if (searchItem == null || searchItem.priceRangeFilter() == null) return;
+        SortOrder order = sort != null && sort.direction() != null ?
+                SortOrder.valueOf(sort.direction().getDirection()) :
+                SortOrder.Desc;
 
-        Optional<BigDecimal> minOpt = Optional.ofNullable(searchItem.priceRangeFilter().minPrice());
-        Optional<BigDecimal> maxOpt = Optional.ofNullable(searchItem.priceRangeFilter().maxPrice());
-
-        if (minOpt.isPresent() || maxOpt.isPresent()) {
-            queryBuilder.withQuery(query -> query.bool(b -> b.filter(f -> f.range(r -> r.number(n -> {
-                n.field(PRICE);
-
-                if (minOpt.isPresent()) {
-                    n.gte(searchItem.priceRangeFilter().minPrice().doubleValue());
-                }
-
-                if (maxOpt.isPresent()) {
-                    n.lte(searchItem.priceRangeFilter().maxPrice().doubleValue());
-                }
-
-                return n;
-            })))));
-        }
+        return new SortOptions(sortField.getField(), order);
     }
 
     private List<ElasticProductSearchItem> search(NativeQueryBuilder queryBuilder) {
         try {
-            return operations.search(queryBuilder.build(), ElasticProductSearchItem.class).stream()
-                    .map(SearchHit::getContent)
-                    .toList();
+            return operations.search(queryBuilder.build(), ElasticProductSearchItem.class).stream().map(SearchHit::getContent).toList();
         } catch (NoSuchIndexException e) {
             log.warn("Elasticsearch internal exception, returning empty list. Reason: ", e);
             return List.of();
@@ -200,4 +234,6 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
     private int getSize(ProductSearchItem searchItem) {
         return (searchItem != null && searchItem.size() != null) ? searchItem.size() : DEFAULT_SIZE;
     }
+
+    private record SortOptions(String sortField, SortOrder order) {}
 }
