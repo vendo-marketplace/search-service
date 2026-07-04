@@ -1,5 +1,6 @@
 package com.vendo.search_service.adapter.product.out;
 
+import com.vendo.search_service.adapter.product.out.nested.ElasticSearchAttribute;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -44,13 +45,4 @@ public record ElasticProductSearchItem(
         Instant createdAt
 ) {
 
-    public record ElasticSearchAttribute(
-
-            @Field(type = FieldType.Keyword)
-            String id,
-
-            @Field(type = FieldType.Keyword)
-            List<String> values
-    ) {
-    }
 }

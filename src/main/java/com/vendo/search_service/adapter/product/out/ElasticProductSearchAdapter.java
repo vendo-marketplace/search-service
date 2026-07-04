@@ -6,10 +6,12 @@ import com.vendo.search_service.domain.product.Product;
 import com.vendo.search_service.domain.product.ProductSearchItem;
 import com.vendo.search_service.port.ProductSearchPort;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ElasticProductSearchAdapter implements ProductSearchPort {

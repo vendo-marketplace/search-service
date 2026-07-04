@@ -147,7 +147,7 @@ class ProductSearchControllerIntegrationTest {
     void search_shouldReturnBadRequest_whenAttributeValuesAreEmpty() throws Exception {
         ProductSearchRequest request = ProductSearchRequestDataBuilder.empty()
                 .attributeFilter(new AttributeFilterRequest(List.of(
-                        new AttributeRequest("color", List.of()))))
+                        new AttributeRequest("id", List.of()))))
                 .build();
 
         mockMvc.perform(post("/search")

@@ -1,7 +1,7 @@
 package com.vendo.search_service.test_utils;
 
 import com.vendo.search_service.adapter.product.out.ElasticProductSearchItem;
-import com.vendo.search_service.adapter.product.out.ElasticProductSearchItem.ElasticSearchAttribute;
+import com.vendo.search_service.adapter.product.out.nested.ElasticSearchAttribute;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
@@ -33,7 +33,7 @@ public class ElasticProductSearchItemDataBuilder {
                 .price(BigDecimal.valueOf(1500))
                 .ownerId("owner-1")
                 .categoryId("category-1")
-                .attributes(List.of(new ElasticSearchAttribute("color", List.of("red", "blue"))))
+                .attributes(List.of(new ElasticSearchAttribute("id", List.of("red", "blue"))))
                 .active(true)
                 .createdAt(Instant.parse("2024-01-01T00:00:00Z"));
     }
