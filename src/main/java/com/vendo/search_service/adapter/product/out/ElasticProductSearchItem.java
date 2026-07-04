@@ -44,13 +44,4 @@ public record ElasticProductSearchItem(
         Instant createdAt
 ) {
 
-    public record ElasticSearchAttribute(
-
-            @Field(type = FieldType.Keyword)
-            String id,
-
-            @Field(type = FieldType.Keyword)
-            List<String> values
-    ) {
-    }
 }
