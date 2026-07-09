@@ -11,6 +11,7 @@ import com.vendo.search_service.port.ProductSearchUseCase;
 import com.vendo.search_service.test_utils.ProductDataBuilder;
 import com.vendo.search_service.test_utils.ProductSearchItemDataBuilder;
 import com.vendo.search_service.test_utils.ProductSearchRequestDataBuilder;
+import com.vendo.security_lib.exception.response.ExceptionResponse;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
@@ -101,10 +103,67 @@ class ProductSearchControllerIntegrationTest {
                 .priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.valueOf(-1), null))
                 .build();
 
-        mockMvc.perform(post("/search")
+        String content = mockMvc.perform(post("/search")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
+
+        assertThat(content).isNotNull();
+        ExceptionResponse exceptionResponse = objectMapper.readValue(content, ExceptionResponse.class);
+        assertThat(exceptionResponse.getMessage()).isEqualTo("Validation failed.");
+        assertThat(exceptionResponse.getErrors()).isNotNull();
+        assertThat(exceptionResponse.getErrors().size()).isEqualTo(1);
+        assertThat(exceptionResponse.getErrors().get("priceRangeFilter.minPrice")).isEqualTo("Minimal price must not be less than zero.");
+        assertThat(exceptionResponse.getPath()).isEqualTo("/search");
+        assertThat(exceptionResponse.getCode()).isEqualTo(400);
+
+        verifyNoInteractions(productSearchUseCase);
+    }
+
+    @Test
+    void search_shouldReturnBadRequest_whenPageIsNegativeAndSizeIsLessThanOne() throws Exception {
+        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty()
+                .page(-1)
+                .size(0)
+                .build();
+
+        String content = mockMvc.perform(post("/search")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
+
+        assertThat(content).isNotNull();
+        ExceptionResponse exceptionResponse = objectMapper.readValue(content, ExceptionResponse.class);
+        assertThat(exceptionResponse.getMessage()).isEqualTo("Validation failed.");
+        assertThat(exceptionResponse.getErrors()).isNotNull();
+        assertThat(exceptionResponse.getErrors().size()).isEqualTo(2);
+        assertThat(exceptionResponse.getErrors().get("page")).isEqualTo("Page must not be less than zero.");
+        assertThat(exceptionResponse.getErrors().get("size")).isEqualTo("Page size must not be less than one.");
+        assertThat(exceptionResponse.getPath()).isEqualTo("/search");
+        assertThat(exceptionResponse.getCode()).isEqualTo(400);
+
+        verifyNoInteractions(productSearchUseCase);
+    }
+
+    @Test
+    void search_shouldReturnBadRequest_whenMinPriceRangeIsHigherThanMaxPrice() throws Exception {
+        ProductSearchRequest request = ProductSearchRequestDataBuilder.empty()
+                .priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.valueOf(100), BigDecimal.valueOf(1)))
+                .build();
+
+        String content = mockMvc.perform(post("/search")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
+
+        assertThat(content).isNotNull();
+        ExceptionResponse exceptionResponse = objectMapper.readValue(content, ExceptionResponse.class);
+        assertThat(exceptionResponse.getMessage()).isEqualTo("Validation failed.");
+        assertThat(exceptionResponse.getErrors()).isNotNull();
+        assertThat(exceptionResponse.getErrors().size()).isEqualTo(1);
+        assertThat(exceptionResponse.getErrors().get("priceRangeFilter")).isEqualTo("Maximum price must be greater than or equal to minimum price.");
+        assertThat(exceptionResponse.getPath()).isEqualTo("/search");
+        assertThat(exceptionResponse.getCode()).isEqualTo(400);
 
         verifyNoInteractions(productSearchUseCase);
     }
@@ -135,12 +194,21 @@ class ProductSearchControllerIntegrationTest {
                         new AttributeRequest(null, List.of("red")))))
                 .build();
 
-        mockMvc.perform(post("/search")
+        String content = mockMvc.perform(post("/search")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
 
         verifyNoInteractions(productSearchUseCase);
+
+        assertThat(content).isNotNull();
+        ExceptionResponse exceptionResponse = objectMapper.readValue(content, ExceptionResponse.class);
+        assertThat(exceptionResponse.getMessage()).isEqualTo("Validation failed.");
+        assertThat(exceptionResponse.getErrors()).isNotNull();
+        assertThat(exceptionResponse.getErrors().size()).isEqualTo(1);
+        assertThat(exceptionResponse.getErrors().get("attributeFilter.attributes[0].id")).isEqualTo("Attribute Id is required.");
+        assertThat(exceptionResponse.getPath()).isEqualTo("/search");
+        assertThat(exceptionResponse.getCode()).isEqualTo(400);
     }
 
     @Test
@@ -150,12 +218,21 @@ class ProductSearchControllerIntegrationTest {
                         new AttributeRequest("id", List.of()))))
                 .build();
 
-        mockMvc.perform(post("/search")
+        String content = mockMvc.perform(post("/search")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
 
         verifyNoInteractions(productSearchUseCase);
+
+        assertThat(content).isNotNull();
+        ExceptionResponse exceptionResponse = objectMapper.readValue(content, ExceptionResponse.class);
+        assertThat(exceptionResponse.getMessage()).isEqualTo("Validation failed.");
+        assertThat(exceptionResponse.getErrors()).isNotNull();
+        assertThat(exceptionResponse.getErrors().size()).isEqualTo(1);
+        assertThat(exceptionResponse.getErrors().get("attributeFilter.attributes[0].values")).isEqualTo("Attribute values are required.");
+        assertThat(exceptionResponse.getPath()).isEqualTo("/search");
+        assertThat(exceptionResponse.getCode()).isEqualTo(400);
     }
 
 }
