@@ -38,6 +38,9 @@ public record ElasticProductSearchItem(
         @Field(type = FieldType.Nested)
         List<ElasticSearchAttribute> attributes,
 
+        @Field(type = FieldType.Keyword)
+        List<String> images,
+
         @Field(type = FieldType.Boolean)
         Boolean active,
 
