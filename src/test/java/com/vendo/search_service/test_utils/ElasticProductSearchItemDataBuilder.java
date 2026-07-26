@@ -21,6 +21,7 @@ public class ElasticProductSearchItemDataBuilder {
     private String ownerId;
     private String categoryId;
     private List<ElasticSearchAttribute> attributes;
+    private List<String> images;
     private Boolean active;
     private Instant createdAt;
 
@@ -34,12 +35,13 @@ public class ElasticProductSearchItemDataBuilder {
                 .ownerId("owner-1")
                 .categoryId("category-1")
                 .attributes(List.of(new ElasticSearchAttribute("id", List.of("red", "blue"))))
+                .images(List.of("url1", "url2"))
                 .active(true)
                 .createdAt(Instant.parse("2024-01-01T00:00:00Z"));
     }
 
     public ElasticProductSearchItem build() {
         return new ElasticProductSearchItem(
-                id, title, description, quantity, price, ownerId, categoryId, attributes, active, createdAt);
+                id, title, description, quantity, price, ownerId, categoryId, attributes, images, active, createdAt);
     }
 }

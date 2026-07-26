@@ -21,6 +21,7 @@ public class ProductDataBuilder {
     private String ownerId;
     private String categoryId;
     private List<Attribute> attributes;
+    private List<String> images;
     private Boolean active;
     private LocalDateTime createdAt;
 
@@ -34,12 +35,13 @@ public class ProductDataBuilder {
                 .ownerId("owner-1")
                 .categoryId("category-1")
                 .attributes(List.of(new Attribute("color", List.of("red", "blue"))))
+                .images(List.of("url1", "url2"))
                 .active(true)
                 .createdAt(LocalDateTime.of(2024, 1, 1, 0, 0));
     }
 
     public Product build() {
         return new Product(
-                id, title, description, quantity, price, ownerId, categoryId, attributes, active, createdAt);
+                id, title, description, quantity, price, ownerId, categoryId, attributes, images, active, createdAt);
     }
 }
