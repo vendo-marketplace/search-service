@@ -1,6 +1,7 @@
 package com.vendo.search_service.adapter.product.in;
 
 import com.vendo.search_service.adapter.product.in.dto.ProductSearchRequest;
+import com.vendo.search_service.adapter.product.in.dto.ProductSearchResponse;
 import com.vendo.search_service.adapter.product.out.mapper.DtoProductMapper;
 import com.vendo.search_service.domain.product.Product;
 import com.vendo.search_service.port.ProductSearchUseCase;
@@ -21,11 +22,12 @@ class ProductSearchController {
     private final DtoProductMapper mapper;
 
     @PostMapping
-    ResponseEntity<List<Product>> search(
+    ResponseEntity<ProductSearchResponse> search(
             @RequestParam(required = false) String q,
             @Valid @RequestBody(required = false) ProductSearchRequest request
     ) {
-        return ResponseEntity.ok(productSearchUseCase.search(q, mapper.toSearchItem(request)));
+        List<Product> products = productSearchUseCase.search(q, mapper.toSearchItem(request));
+        return ResponseEntity.ok(new ProductSearchResponse(products));
     }
 
 }
