@@ -26,6 +26,9 @@ public record ElasticProductSearchItem(
         @Field(type = FieldType.Integer)
         Integer quantity,
 
+        @Field(type = FieldType.Boolean)
+        Boolean isNew,
+
         @Field(type = FieldType.Double)
         BigDecimal price,
 
