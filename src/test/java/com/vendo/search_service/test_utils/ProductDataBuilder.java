@@ -17,6 +17,7 @@ public class ProductDataBuilder {
     private String title;
     private String description;
     private Integer quantity;
+    private Boolean isNew;
     private BigDecimal price;
     private String ownerId;
     private String categoryId;
@@ -31,6 +32,7 @@ public class ProductDataBuilder {
                 .title("Gaming Laptop")
                 .description("Powerful gaming laptop")
                 .quantity(10)
+                .isNew(true)
                 .price(BigDecimal.valueOf(1500))
                 .ownerId("owner-1")
                 .categoryId("category-1")
@@ -42,6 +44,6 @@ public class ProductDataBuilder {
 
     public Product build() {
         return new Product(
-                id, title, description, quantity, price, ownerId, categoryId, attributes, images, active, createdAt);
+                id, title, description, quantity, isNew, price, ownerId, categoryId, attributes, images, active, createdAt);
     }
 }

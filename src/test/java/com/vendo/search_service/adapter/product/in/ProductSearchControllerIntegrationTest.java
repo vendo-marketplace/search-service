@@ -65,7 +65,8 @@ class ProductSearchControllerIntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data").isArray())
                     .andExpect(jsonPath("$.data[0].id").value("p-1"))
-                    .andExpect(jsonPath("$.data[0].title").value("Gaming Laptop"));
+                    .andExpect(jsonPath("$.data[0].title").value("Gaming Laptop"))
+                    .andExpect(jsonPath("$.data[0].isNew").value("true"));
 
             verify(productSearchUseCase).search("laptop", item);
         }
