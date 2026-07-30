@@ -1,6 +1,7 @@
 package com.vendo.search_service.test_utils;
 
 import com.vendo.search_service.adapter.product.out.ElasticProductSearchItem;
+import com.vendo.search_service.adapter.product.out.nested.ElasticAddress;
 import com.vendo.search_service.adapter.product.out.nested.ElasticSearchAttribute;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -14,16 +15,22 @@ import java.util.List;
 public class ElasticProductSearchItemDataBuilder {
 
     private String id;
+
     private String title;
     private String description;
     private Integer quantity;
-    private Boolean isNew;
     private BigDecimal price;
-    private String ownerId;
-    private String categoryId;
+    private ElasticAddress address;
+
     private List<ElasticSearchAttribute> attributes;
     private List<String> images;
+
+    private String ownerId;
+    private String categoryId;
+
+    private Boolean isNew;
     private Boolean active;
+
     private Instant createdAt;
 
     public static ElasticProductSearchItemDataBuilder withAllFields() {
@@ -35,6 +42,7 @@ public class ElasticProductSearchItemDataBuilder {
                 .isNew(true)
                 .price(BigDecimal.valueOf(1500))
                 .ownerId("owner-1")
+                .address(new ElasticAddress("Lviv region", "Lviv", new ElasticAddress.ElasticLocation(49.8397, 24.0297)))
                 .categoryId("category-1")
                 .attributes(List.of(new ElasticSearchAttribute("id", List.of("red", "blue"))))
                 .images(List.of("url1", "url2"))
@@ -44,6 +52,6 @@ public class ElasticProductSearchItemDataBuilder {
 
     public ElasticProductSearchItem build() {
         return new ElasticProductSearchItem(
-                id, title, description, quantity, isNew, price, ownerId, categoryId, attributes, images, active, createdAt);
+                id, title, description, quantity, price, address, attributes, images, ownerId, categoryId, isNew, active, createdAt);
     }
 }
