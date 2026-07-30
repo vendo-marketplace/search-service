@@ -3,6 +3,7 @@ package com.vendo.search_service.adapter.product.out;
 import com.vendo.search_service.adapter.product.out.nested.ElasticAddress;
 import com.vendo.search_service.adapter.product.out.nested.ElasticSearchAttribute;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -13,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
+@Data
 @AllArgsConstructor
 @Document(indexName = "products")
 public class ElasticProductSearchItem {
