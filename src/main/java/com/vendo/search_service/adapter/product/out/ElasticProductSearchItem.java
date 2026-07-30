@@ -1,5 +1,6 @@
 package com.vendo.search_service.adapter.product.out;
 
+import com.vendo.search_service.adapter.product.out.nested.ElasticAddress;
 import com.vendo.search_service.adapter.product.out.nested.ElasticSearchAttribute;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
@@ -12,43 +13,38 @@ import java.time.Instant;
 import java.util.List;
 
 @Document(indexName = "products")
-public record ElasticProductSearchItem(
+public class ElasticProductSearchItem {
 
         @Id
-        String id,
+        private String id;
 
         @Field(type = FieldType.Text)
-        String title,
-
+        private String title;
         @Field(type = FieldType.Text)
-        String description,
-
+        private String description;
         @Field(type = FieldType.Integer)
-        Integer quantity,
-
-        @Field(type = FieldType.Boolean)
-        Boolean isNew,
-
+        private Integer quantity;
         @Field(type = FieldType.Double)
-        BigDecimal price,
-
-        @Field(type = FieldType.Keyword)
-        String ownerId,
-
-        @Field(type = FieldType.Keyword)
-        String categoryId,
+        private BigDecimal price;
+        @Field(type = FieldType.Object)
+        private ElasticAddress address;
 
         @Field(type = FieldType.Nested)
-        List<ElasticSearchAttribute> attributes,
+        private List<ElasticSearchAttribute> attributes;
+        @Field(type = FieldType.Keyword)
+        private List<String> images;
 
         @Field(type = FieldType.Keyword)
-        List<String> images,
+        private String ownerId;
+        @Field(type = FieldType.Keyword)
+        private String categoryId;
 
         @Field(type = FieldType.Boolean)
-        Boolean active,
+        private Boolean isNew;
+        @Field(type = FieldType.Boolean)
+        private Boolean active;
 
         @Field(type = FieldType.Date, format = DateFormat.date_time)
-        Instant createdAt
-) {
+        private Instant createdAt;
 
 }
