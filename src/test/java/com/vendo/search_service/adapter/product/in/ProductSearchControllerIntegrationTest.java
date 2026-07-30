@@ -66,7 +66,15 @@ class ProductSearchControllerIntegrationTest {
                     .andExpect(jsonPath("$.data").isArray())
                     .andExpect(jsonPath("$.data[0].id").value("p-1"))
                     .andExpect(jsonPath("$.data[0].title").value("Gaming Laptop"))
-                    .andExpect(jsonPath("$.data[0].isNew").value("true"));
+                    .andExpect(jsonPath("$.data[0].isNew").value("true"))
+                    .andExpect(jsonPath("$.data[0].address.region")
+                            .value(products.get(0).address().region()))
+                    .andExpect(jsonPath("$.data[0].address.city")
+                            .value(products.get(0).address().city()))
+                    .andExpect(jsonPath("$.data[0].address.location.lat")
+                            .value(products.get(0).address().location().lat()))
+                    .andExpect(jsonPath("$.data[0].address.location.lon")
+                            .value(products.get(0).address().location().lon()));
 
             verify(productSearchUseCase).search("laptop", item);
         }

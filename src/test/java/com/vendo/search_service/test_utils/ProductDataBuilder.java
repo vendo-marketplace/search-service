@@ -2,6 +2,7 @@ package com.vendo.search_service.test_utils;
 
 import com.vendo.search_service.domain.product.Product;
 import com.vendo.search_service.domain.product.Product.Attribute;
+import com.vendo.search_service.domain.product.nested.Address;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
@@ -14,16 +15,21 @@ import java.util.List;
 public class ProductDataBuilder {
 
     private String id;
+
     private String title;
     private String description;
     private Integer quantity;
-    private Boolean isNew;
     private BigDecimal price;
-    private String ownerId;
-    private String categoryId;
     private List<Attribute> attributes;
     private List<String> images;
+    private Address address;
+
+    private String ownerId;
+    private String categoryId;
+
+    private Boolean isNew;
     private Boolean active;
+
     private LocalDateTime createdAt;
 
     public static ProductDataBuilder withAllFields() {
@@ -36,6 +42,7 @@ public class ProductDataBuilder {
                 .price(BigDecimal.valueOf(1500))
                 .ownerId("owner-1")
                 .categoryId("category-1")
+                .address(new Address("Lviv region", "Lviv", new Address.Location(49.8397, 24.0297)))
                 .attributes(List.of(new Attribute("color", List.of("red", "blue"))))
                 .images(List.of("url1", "url2"))
                 .active(true)
@@ -44,6 +51,6 @@ public class ProductDataBuilder {
 
     public Product build() {
         return new Product(
-                id, title, description, quantity, isNew, price, ownerId, categoryId, attributes, images, active, createdAt);
+                id, title, description, quantity, price, attributes, images, address, isNew, active, ownerId, categoryId, createdAt);
     }
 }

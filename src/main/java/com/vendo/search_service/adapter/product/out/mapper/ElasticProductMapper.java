@@ -15,6 +15,8 @@ public interface ElasticProductMapper {
 
     List<Product> toProducts(List<ElasticProductSearchItem> entities);
 
+    Product toProduct(ElasticProductSearchItem entity);
+
     default LocalDateTime toLocalDateTime(Instant date) {
         return date == null
                 ? null
