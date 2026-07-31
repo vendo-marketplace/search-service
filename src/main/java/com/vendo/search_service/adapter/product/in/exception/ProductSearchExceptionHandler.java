@@ -1,7 +1,7 @@
 package com.vendo.search_service.adapter.product.in.exception;
 
 import com.vendo.search_service.domain.product.exception.InternalSearchException;
-import com.vendo.security_lib.exception.response.ExceptionResponse;
+import com.vendo.security_lib.exception.ExceptionResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

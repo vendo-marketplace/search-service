@@ -11,7 +11,7 @@ import com.vendo.search_service.port.ProductSearchUseCase;
 import com.vendo.search_service.test_utils.ProductDataBuilder;
 import com.vendo.search_service.test_utils.ProductSearchItemDataBuilder;
 import com.vendo.search_service.test_utils.ProductSearchRequestDataBuilder;
-import com.vendo.security_lib.exception.response.ExceptionResponse;
+import com.vendo.security_lib.exception.ExceptionResponse;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

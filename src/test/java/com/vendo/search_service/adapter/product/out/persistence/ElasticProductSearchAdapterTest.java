@@ -1,4 +1,4 @@
-package com.vendo.search_service.adapter.product.out;
+package com.vendo.search_service.adapter.product.out.persistence;
 
 import com.vendo.search_service.adapter.product.out.mapper.ElasticProductMapper;
 import com.vendo.search_service.adapter.search.SearchRepository;

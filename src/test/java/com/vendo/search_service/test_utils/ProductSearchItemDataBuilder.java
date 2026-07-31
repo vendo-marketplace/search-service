@@ -1,6 +1,7 @@
 package com.vendo.search_service.test_utils;
 
 import com.vendo.search_service.domain.product.ProductSearchItem;
+import com.vendo.search_service.domain.product.filter.AddressFilter;
 import com.vendo.search_service.domain.product.filter.AttributeFilter;
 import com.vendo.search_service.domain.product.filter.PriceRangeFilter;
 import com.vendo.search_service.domain.product.sort.ProductSortField;
@@ -18,7 +19,9 @@ public class ProductSearchItemDataBuilder {
 
     private String categoryId;
     private Boolean active;
+    private Boolean isNew;
     private SortBody sort;
+    private AddressFilter addressFilter;
     private AttributeFilter attributeFilter;
     private PriceRangeFilter priceRangeFilter;
     private Integer size;
@@ -32,7 +35,9 @@ public class ProductSearchItemDataBuilder {
         return new ProductSearchItemDataBuilder()
                 .categoryId("category-1")
                 .active(true)
+                .isNew(true)
                 .sort(new SortBody(ProductSortField.PRICE, SortDirection.ASC))
+                .addressFilter(new AddressFilter("Lviv", "Lviv region"))
                 .attributeFilter(new AttributeFilter(List.of(
                         new AttributeFilter.Attribute("color", List.of("red", "blue"))
                 )))
@@ -42,6 +47,6 @@ public class ProductSearchItemDataBuilder {
     }
 
     public ProductSearchItem build() {
-        return new ProductSearchItem(categoryId, active, sort, attributeFilter, priceRangeFilter, size, page);
+        return new ProductSearchItem(categoryId, active, isNew, sort, addressFilter, attributeFilter, priceRangeFilter, size, page);
     }
 }

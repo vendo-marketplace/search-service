@@ -1,7 +1,7 @@
-package com.vendo.search_service.adapter.product.out;
+package com.vendo.search_service.adapter.product.out.persistence;
 
-import com.vendo.search_service.adapter.product.out.nested.ElasticAddress;
-import com.vendo.search_service.adapter.product.out.nested.ElasticSearchAttribute;
+import com.vendo.search_service.adapter.product.out.persistence.nested.ElasticAddress;
+import com.vendo.search_service.adapter.product.out.persistence.nested.ElasticSearchAttribute;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.data.annotation.Id;

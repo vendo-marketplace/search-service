@@ -11,8 +11,12 @@ public final class ProductSearchFields {
     public static final String DESCRIPTION = "description";
     public static final String PRICE = "price";
     public static final String ACTIVE = "active";
+    public static final String IS_NEW = "isNew";
     public static final String CATEGORY_ID = "categoryId";
     public static final String ATTRIBUTES = "attributes";
+    public static final String ADDRESS = "address";
+    public static final String ADDRESS_CITY = ADDRESS + ".city";
+    public static final String ADDRESS_REGION = ADDRESS + ".region";
     public static final String ATTRIBUTES_ID = ATTRIBUTES + ".id";
     public static final String ATTRIBUTES_VALUES = ATTRIBUTES + ".values";
 

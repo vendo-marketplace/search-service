@@ -1,21 +1,16 @@
 package com.vendo.search_service.adapter.product.out;
 
-import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
-import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.vendo.search_service.adapter.product.out.constants.ProductSearchFields;
-import com.vendo.search_service.domain.product.ProductSearchItem;
+import com.vendo.search_service.adapter.product.out.persistence.ElasticProductSearchItem;
 import com.vendo.search_service.domain.product.exception.InternalSearchException;
-import com.vendo.search_service.domain.product.filter.AttributeFilter;
-import com.vendo.search_service.domain.product.filter.PriceRangeFilter;
 import com.vendo.search_service.domain.product.sort.ProductSortField;
 import com.vendo.search_service.domain.product.sort.SortBody;
 import com.vendo.search_service.domain.product.sort.SortDirection;
 import com.vendo.search_service.test_utils.ElasticProductSearchItemDataBuilder;
 import com.vendo.search_service.test_utils.ProductSearchItemDataBuilder;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,12 +27,11 @@ import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
-import static com.vendo.search_service.adapter.product.out.constants.ProductSearchFields.*;
+import static com.vendo.search_service.adapter.product.out.constants.ProductSearchFields.DESCRIPTION;
+import static com.vendo.search_service.adapter.product.out.constants.ProductSearchFields.TITLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,6 +46,9 @@ class ElasticProductSearchClientTest {
 
     @Mock
     private ElasticsearchOperations operations;
+
+    @Mock
+    private List<QueryContributor> queryContributors;
 
     @InjectMocks
     private ElasticProductSearchClient client;
@@ -162,25 +159,6 @@ class ElasticProductSearchClientTest {
         assertThat(query.isMatchAll()).isTrue();
     }
 
-
-    @Test
-    void search_shouldAddTermFilter_whenCategoryProvided() {
-        givenSearchReturns();
-        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().categoryId("id").build();
-
-        client.search(null, searchItem);
-
-        Query query = captureQuery().getQuery();
-
-        assertThat(query).isNotNull();
-        assertThat(query.isBool()).isTrue();
-        assertThat(query.bool().filter()).isNotEmpty();
-        assertThat(query.bool().filter()).hasSize(1);
-        assertThat(query.bool().filter().get(0).isTerm()).isTrue();
-        assertThat(query.bool().filter().get(0).term().field()).isEqualTo(CATEGORY_ID);
-        assertThat(query.bool().filter().get(0).term().value().stringValue()).isEqualTo(searchItem.categoryId());
-    }
-
     @Test
     void search_shouldNotIncludeFilter_whenFilterIsEmpty() {
         givenSearchReturns();
@@ -192,160 +170,6 @@ class ElasticProductSearchClientTest {
         assertThat(query).isNotNull();
         assertThat(query.isBool()).isFalse();
     }
-
-    @Test
-    void search_shouldAddTermFilter_whenActiveIsTrue() {
-        givenSearchReturns();
-
-        client.search(null, ProductSearchItemDataBuilder.empty().active(true).build());
-
-        Query query = captureQuery().getQuery();
-
-        assertThat(query).isNotNull();
-        assertThat(query.isBool()).isTrue();
-        assertThat(query.bool().filter()).isNotEmpty();
-        assertThat(query.bool().filter()).hasSize(1);
-        assertThat(query.bool().filter().get(0).isTerm()).isTrue();
-        assertThat(query.bool().filter().get(0).term().field()).isEqualTo(ACTIVE);
-        assertThat(query.bool().filter().get(0).term().value().booleanValue()).isTrue();
-    }
-
-    @Test
-    void search_shouldAddTermFilter_whenActiveIsFalse() {
-        givenSearchReturns();
-
-        client.search(null, ProductSearchItemDataBuilder.empty().active(false).build());
-
-        Query query = captureQuery().getQuery();
-
-        assertThat(query).isNotNull();
-        assertThat(query.isBool()).isTrue();
-        assertThat(query.bool().filter()).isNotEmpty();
-        assertThat(query.bool().filter()).hasSize(1);
-        assertThat(query.bool().filter().get(0).isTerm()).isTrue();
-        assertThat(query.bool().filter().get(0).term().field()).isEqualTo(ACTIVE);
-        assertThat(query.bool().filter().get(0).term().value().booleanValue()).isFalse();
-    }
-
-    @Test
-    void search_shouldAddRangeWithMinAndMax_whenBothProvided() {
-        givenSearchReturns();
-
-        client.search(null, ProductSearchItemDataBuilder.empty().priceRangeFilter(new PriceRangeFilter(BigDecimal.valueOf(10), BigDecimal.valueOf(100))).build());
-
-        Query query = captureQuery().getQuery();
-        Assertions.assertNotNull(query);
-        assertThat(query.isBool()).isTrue();
-        assertThat(query.bool().filter()).hasSize(1);
-
-        Query range = query.bool().filter().get(0);
-        assertThat(range.isRange()).isTrue();
-        assertThat(range.range().number().field()).isEqualTo(PRICE);
-        assertThat(range.range().number().gte()).isEqualTo(10.0);
-        assertThat(range.range().number().lte()).isEqualTo(100.0);
-    }
-
-    @Test
-    void search_shouldNotAddRange_whenBothAreNotProvided() {
-        givenSearchReturns();
-
-        client.search(null, ProductSearchItemDataBuilder.empty().priceRangeFilter(new PriceRangeFilter(null, null)).build());
-
-        Query query = captureQuery().getQuery();
-        assertThat(query).isNotNull();
-        assertThat(query.isBool()).isFalse();
-    }
-
-    @Test
-    void search_shouldAddRangeWithOnlyMin_whenMaxIsNull() {
-        givenSearchReturns();
-
-        client.search(null, ProductSearchItemDataBuilder.empty().priceRangeFilter(new PriceRangeFilter(BigDecimal.valueOf(10), null)).build());
-
-        Query range = Objects.requireNonNull(captureQuery().getQuery()).bool().filter().get(0);
-        assertThat(range.range().number().gte()).isEqualTo(10.0);
-        assertThat(range.range().number().lte()).isNull();
-    }
-
-    @Test
-    void search_addsRangeWithOnlyMax_whenMinIsNull() {
-        givenSearchReturns();
-
-        client.search(null, ProductSearchItemDataBuilder.empty().priceRangeFilter(new PriceRangeFilter(null, BigDecimal.valueOf(100))).build());
-
-        Query range = Objects.requireNonNull(captureQuery().getQuery()).bool().filter().get(0);
-        assertThat(range.range().number().gte()).isNull();
-        assertThat(range.range().number().lte()).isEqualTo(100.0);
-    }
-
-    @Test
-    void search_shouldAddOneNestedMustQueryPerAttribute() {
-        givenSearchReturns();
-        AttributeFilter.Attribute collorAttribute = new AttributeFilter.Attribute("id1", List.of("red"));
-        AttributeFilter.Attribute sizeAttribute = new AttributeFilter.Attribute("id2", List.of("M", "L"));
-        AttributeFilter filter = new AttributeFilter(List.of(collorAttribute, sizeAttribute));
-
-        client.search(null, ProductSearchItemDataBuilder.empty().attributeFilter(filter).build());
-
-        Query query = captureQuery().getQuery();
-
-        Assertions.assertNotNull(query);
-        assertThat(query.isBool()).isTrue();
-        assertThat(query.bool().filter()).hasSize(2);
-
-        assertThat(query.bool().filter().get(0).isNested());
-        NestedQuery colorNestedAttribute = query.bool().filter().get(0).nested();
-        assertThat(colorNestedAttribute.path()).isEqualTo(ATTRIBUTES);
-        assertThat(colorNestedAttribute.query().isBool()).isTrue();
-        assertThat(colorNestedAttribute.query().bool().must()).hasSize(2);
-
-        Query colorAttributeIdQuery = colorNestedAttribute.query().bool().must().get(0);
-        assertThat(colorAttributeIdQuery.isTerm()).isTrue();
-        assertThat(colorAttributeIdQuery.term().field()).isEqualTo(ATTRIBUTES_ID);
-        assertThat(colorAttributeIdQuery.term().value().stringValue()).isEqualTo(collorAttribute.id());
-
-        Query colorAttributeValuesQuery = colorNestedAttribute.query().bool().must().get(1);
-        assertThat(colorAttributeValuesQuery.isTerms()).isTrue();
-        assertThat(colorAttributeValuesQuery.terms().field()).isEqualTo(ATTRIBUTES_VALUES);
-        assertThat(colorAttributeValuesQuery.terms().terms().value().stream().map(FieldValue::stringValue).toList().equals(collorAttribute.values())).isTrue();
-
-        assertThat(query.bool().filter().get(1).isNested());
-        NestedQuery sizeNestedAttribute = query.bool().filter().get(1).nested();
-        assertThat(sizeNestedAttribute.path()).isEqualTo(ATTRIBUTES);
-
-        Query sizeAttributeIdQuery = colorNestedAttribute.query().bool().must().get(0);
-        assertThat(sizeAttributeIdQuery.isTerm()).isTrue();
-        assertThat(sizeAttributeIdQuery.term().field()).isEqualTo(ATTRIBUTES_ID);
-        assertThat(sizeAttributeIdQuery.term().value().stringValue()).isEqualTo(collorAttribute.id());
-
-        Query sizeAttributeValuesQuery = colorNestedAttribute.query().bool().must().get(1);
-        assertThat(sizeAttributeValuesQuery.isTerms()).isTrue();
-        assertThat(sizeAttributeValuesQuery.terms().field()).isEqualTo(ATTRIBUTES_VALUES);
-        assertThat(sizeAttributeValuesQuery.terms().terms().value().stream().map(FieldValue::stringValue).toList().equals(collorAttribute.values())).isTrue();
-    }
-
-    @Test
-    void search_shouldSkipAttributes_whenListIsEmpty() {
-        givenSearchReturns();
-
-        client.search(null, ProductSearchItemDataBuilder.empty().attributeFilter(new AttributeFilter(List.of())).build());
-
-        Query query = captureQuery().getQuery();
-        Assertions.assertNotNull(query);
-        assertThat(query.isBool()).isFalse();
-    }
-
-    @Test
-    void search_shouldSkipAttributes_whenFilterIsNull() {
-        givenSearchReturns();
-
-        client.search(null, ProductSearchItemDataBuilder.empty().build());
-
-        Query query = captureQuery().getQuery();
-        Assertions.assertNotNull(query);
-        assertThat(query.isBool()).isFalse();
-    }
-
 
     @Test
     void search_shouldDefaultToCreatedAtDesc_whenSearchItemIsNull() {
