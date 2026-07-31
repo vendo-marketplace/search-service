@@ -1,5 +1,6 @@
-package com.vendo.search_service.adapter.product.out.nested;
+package com.vendo.search_service.adapter.product.out.persistence.nested;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -7,7 +8,8 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import java.util.List;
 
 @Data
-public final class ElasticAttribute {
+@AllArgsConstructor
+public  final class ElasticSearchAttribute {
 
     @Field(type = FieldType.Keyword)
     private String id;

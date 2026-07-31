@@ -1,8 +1,8 @@
 package com.vendo.search_service.test_utils;
 
-import com.vendo.search_service.adapter.product.out.ElasticProductSearchItem;
-import com.vendo.search_service.adapter.product.out.nested.ElasticAddress;
-import com.vendo.search_service.adapter.product.out.nested.ElasticSearchAttribute;
+import com.vendo.search_service.adapter.product.out.persistence.ElasticProductSearchItem;
+import com.vendo.search_service.adapter.product.out.persistence.nested.ElasticAddress;
+import com.vendo.search_service.adapter.product.out.persistence.nested.ElasticSearchAttribute;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 

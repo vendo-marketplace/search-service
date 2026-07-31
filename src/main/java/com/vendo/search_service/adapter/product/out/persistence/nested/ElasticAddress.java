@@ -1,4 +1,4 @@
-package com.vendo.search_service.adapter.product.out.nested;
+package com.vendo.search_service.adapter.product.out.persistence.nested;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,6 +1,6 @@
 package com.vendo.search_service.adapter.product.out.mapper;
 
-import com.vendo.search_service.adapter.product.out.ElasticProductSearchItem;
+import com.vendo.search_service.adapter.product.out.persistence.ElasticProductSearchItem;
 import com.vendo.search_service.domain.product.Product;
 import com.vendo.search_service.infrastructure.mapper.MapStructConfig;
 import org.mapstruct.Mapper;

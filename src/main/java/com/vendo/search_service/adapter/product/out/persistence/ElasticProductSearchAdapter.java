@@ -1,4 +1,4 @@
-package com.vendo.search_service.adapter.product.out;
+package com.vendo.search_service.adapter.product.out.persistence;
 
 import com.vendo.search_service.adapter.product.out.mapper.ElasticProductMapper;
 import com.vendo.search_service.adapter.search.SearchRepository;
@@ -14,7 +14,7 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ElasticProductSearchAdapter implements ProductSearchPort {
+class ElasticProductSearchAdapter implements ProductSearchPort {
 
     private final SearchRepository<ElasticProductSearchItem, ProductSearchItem> repository;
     private final ElasticProductMapper mapper;
