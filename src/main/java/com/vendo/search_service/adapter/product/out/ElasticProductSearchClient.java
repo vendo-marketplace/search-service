@@ -3,11 +3,14 @@ package com.vendo.search_service.adapter.product.out;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
+import com.vendo.core_lib.utils.CollectionUtils;
 import com.vendo.core_lib.utils.StringUtils;
 import com.vendo.search_service.adapter.product.out.constants.ProductSearchFields;
-import com.vendo.search_service.domain.product.exception.InternalSearchException;
 import com.vendo.search_service.adapter.search.SearchRepository;
 import com.vendo.search_service.domain.product.ProductSearchItem;
+import com.vendo.search_service.domain.product.exception.InternalSearchException;
+import com.vendo.search_service.domain.product.filter.AddressFilter;
 import com.vendo.search_service.domain.product.filter.AttributeFilter;
 import com.vendo.search_service.domain.product.sort.ProductSortField;
 import com.vendo.search_service.domain.product.sort.SortBody;
@@ -55,22 +58,16 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         textQuery(q).ifPresent(must::add);
         categoryQuery(searchItem).ifPresent(filters::add);
         activeQuery(searchItem).ifPresent(filters::add);
+        isNewQuery(searchItem).ifPresent(filters::add);
         priceQuery(searchItem).ifPresent(filters::add);
         attributesQuery(searchItem).ifPresent(filters::addAll);
+        addressQuery(searchItem).ifPresent(filters::addAll);
 
         SortOptions sortOptions = sort(searchItem);
         queryBuilder.withSort(s -> s.field(f -> f.field(sortOptions.sortField()).order(sortOptions.order)));
         queryBuilder.withPageable(pageable(searchItem));
 
-        if (must.isEmpty() && filters.isEmpty()) {
-            queryBuilder.withQuery(qb -> qb.matchAll(ma -> ma));
-        } else {
-            queryBuilder.withQuery(qb -> qb.bool(b -> {
-                if (!must.isEmpty()) b.must(must);
-                if (!filters.isEmpty()) b.filter(filters);
-                return b;
-            }));
-        }
+        withDefaults(queryBuilder, must, filters);
 
         return search(queryBuilder);
     }
@@ -122,6 +119,19 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         return Optional.of(query);
     }
 
+    private Optional<Query> isNewQuery(ProductSearchItem searchItem) {
+        if (searchItem == null || searchItem.isNew() == null) {
+            return Optional.empty();
+        }
+
+        Query query = Query.of(builder -> builder
+                .term(t -> t
+                        .field(IS_NEW)
+                        .value(searchItem.isNew())));
+
+        return Optional.of(query);
+    }
+
     private Optional<Query> priceQuery(ProductSearchItem searchItem) {
         if (searchItem == null || searchItem.priceRangeFilter() == null) {
             return Optional.empty();
@@ -159,8 +169,7 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         }
 
         AttributeFilter filter = searchItem.attributeFilter();
-
-        if (filter.attributes().isEmpty()) {
+        if (CollectionUtils.isEmpty(filter.attributes())) {
             return Optional.empty();
         }
 
@@ -181,6 +190,25 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         ).toList();
 
         return Optional.of(queries);
+    }
+
+    private Optional<List<Query>> addressQuery(ProductSearchItem searchItem) {
+        if (searchItem == null || searchItem.addressFilter() == null) {
+            return Optional.empty();
+        }
+
+        AddressFilter filter = searchItem.addressFilter();
+        if (StringUtils.isEmpty(filter.city())) {
+            return Optional.empty();
+        }
+
+        Query cityQuery = TermQuery.of(b -> b.field(ADDRESS_CITY).value(filter.city()))._toQuery();
+        if (StringUtils.isEmpty(filter.region())) {
+            return Optional.of(List.of(cityQuery));
+        }
+
+        Query regionQuery = TermQuery.of(b -> b.field(ADDRESS_REGION).value(filter.region()))._toQuery();
+        return Optional.of(List.of(cityQuery, regionQuery));
     }
 
     private PageRequest pageable(ProductSearchItem searchItem) {
@@ -214,6 +242,18 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
         }
     }
 
+    private void withDefaults(NativeQueryBuilder queryBuilder, List<Query> must, List<Query> filters) {
+        if (must.isEmpty() && filters.isEmpty()) {
+            queryBuilder.withQuery(qb -> qb.matchAll(ma -> ma));
+        } else {
+            queryBuilder.withQuery(qb -> qb.bool(b -> {
+                if (!must.isEmpty()) b.must(must);
+                if (!filters.isEmpty()) b.filter(filters);
+                return b;
+            }));
+        }
+    }
+
     private int getPage(ProductSearchItem searchItem) {
         return (searchItem != null && searchItem.page() != null)
                 ? searchItem.page()
@@ -226,5 +266,6 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
                 : DEFAULT_SIZE;
     }
 
-    private record SortOptions(String sortField, SortOrder order) {}
+    private record SortOptions(String sortField, SortOrder order) {
+    }
 }

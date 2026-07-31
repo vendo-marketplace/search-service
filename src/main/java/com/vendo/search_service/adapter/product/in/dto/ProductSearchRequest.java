@@ -6,13 +6,16 @@ import jakarta.validation.constraints.Min;
 
 public record ProductSearchRequest(
         String categoryId,
+
         Boolean active,
+        Boolean isNew,
 
         SortBody sort,
 
         @Valid
+        AddressFilterRequest addressFilter,
+        @Valid
         AttributeFilterRequest attributeFilter,
-
         @Valid
         PriceRangeFilterRequest priceRangeFilter,
 
