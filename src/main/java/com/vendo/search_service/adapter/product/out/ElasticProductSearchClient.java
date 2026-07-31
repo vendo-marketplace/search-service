@@ -69,6 +69,10 @@ public class ElasticProductSearchClient implements SearchRepository<ElasticProdu
 
         withDefaults(queryBuilder, must, filters);
 
+        System.out.println(queryBuilder);
+        System.out.println(queryBuilder.build());
+        System.out.println(queryBuilder.build().getQuery());
+
         return search(queryBuilder);
     }
 
