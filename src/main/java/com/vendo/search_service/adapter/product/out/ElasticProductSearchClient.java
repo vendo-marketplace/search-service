@@ -6,22 +6,16 @@ import com.vendo.core_lib.utils.StringUtils;
 import com.vendo.search_service.adapter.product.out.constants.ProductSearchFields;
 import com.vendo.search_service.adapter.product.out.persistence.ElasticProductSearchItem;
 import com.vendo.search_service.adapter.search.SearchRepository;
-import com.vendo.search_service.domain.product.ProductSearchItem;
-import com.vendo.search_service.domain.product.exception.InternalSearchException;
-import com.vendo.search_service.domain.product.sort.ProductSortField;
-import com.vendo.search_service.domain.product.sort.SortBody;
+import com.vendo.search_service.adapter.search.dto.SearchResponse;
+import com.vendo.search_service.domain.product.search.ProductSearchItem;
+import com.vendo.search_service.domain.product.search.sort.ProductSortField;
+import com.vendo.search_service.domain.product.search.sort.SortBody;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.elasticsearch.NoSuchIndexException;
-import org.springframework.data.elasticsearch.ResourceFailureException;
-import org.springframework.data.elasticsearch.ResourceNotFoundException;
-import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -37,9 +31,9 @@ import static com.vendo.search_service.adapter.product.out.constants.ProductSear
 class ElasticProductSearchClient implements SearchRepository<ElasticProductSearchItem, ProductSearchItem> {
 
     private static final String FUZZINESS_MODE = "AUTO";
-    private final ElasticsearchOperations operations;
 
     private final List<QueryContributor> queryContributors;
+    private final ElasticProductResultsClient searchResultClient;
 
     @Value("${product.search.size}")
     private int DEFAULT_SIZE;
@@ -47,7 +41,7 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
     private int DEFAULT_PAGE;
 
     @Override
-    public List<ElasticProductSearchItem> search(String q, ProductSearchItem searchItem) {
+    public SearchResponse<ElasticProductSearchItem> search(String q, ProductSearchItem searchItem) {
         List<Query> must = new ArrayList<>(), filters = new ArrayList<>();
         NativeQueryBuilder queryBuilder = NativeQuery.builder();
 
@@ -58,7 +52,7 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
         withPage(queryBuilder, searchItem);
         withDefaults(queryBuilder, must, filters);
 
-        return search(queryBuilder);
+        return searchResultClient.getResults(queryBuilder, searchItem);
     }
 
     private Optional<Query> textQuery(String q) {
@@ -110,17 +104,6 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
                 SortOrder.Desc;
 
         return new SortOptions(sortField.getField(), order);
-    }
-
-    private List<ElasticProductSearchItem> search(NativeQueryBuilder queryBuilder) {
-        try {
-            return operations.search(queryBuilder.build(), ElasticProductSearchItem.class).stream().map(SearchHit::getContent).toList();
-        } catch (NoSuchIndexException e) {
-            log.warn("Elasticsearch internal exception, returning empty list. Reason: ", e);
-            return List.of();
-        } catch (UncategorizedElasticsearchException | ResourceNotFoundException | ResourceFailureException e) {
-            throw new InternalSearchException(e);
-        }
     }
 
     private void withDefaults(NativeQueryBuilder queryBuilder, List<Query> must, List<Query> filters) {

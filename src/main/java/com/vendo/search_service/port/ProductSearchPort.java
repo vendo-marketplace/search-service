@@ -1,12 +1,10 @@
 package com.vendo.search_service.port;
 
-import com.vendo.search_service.domain.product.Product;
-import com.vendo.search_service.domain.product.ProductSearchItem;
-
-import java.util.List;
+import com.vendo.search_service.domain.product.search.ProductSearchItem;
+import com.vendo.search_service.domain.product.search.ProductSearchData;
 
 public interface ProductSearchPort {
 
-    List<Product> search(String q, ProductSearchItem searchItem);
+    ProductSearchData search(String q, ProductSearchItem searchItem);
 
 }

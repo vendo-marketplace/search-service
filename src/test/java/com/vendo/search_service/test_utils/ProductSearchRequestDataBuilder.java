@@ -5,9 +5,9 @@ import com.vendo.search_service.adapter.product.in.dto.AttributeFilterRequest;
 import com.vendo.search_service.adapter.product.in.dto.AttributeFilterRequest.AttributeRequest;
 import com.vendo.search_service.adapter.product.in.dto.PriceRangeFilterRequest;
 import com.vendo.search_service.adapter.product.in.dto.ProductSearchRequest;
-import com.vendo.search_service.domain.product.sort.ProductSortField;
-import com.vendo.search_service.domain.product.sort.SortBody;
-import com.vendo.search_service.domain.product.sort.SortDirection;
+import com.vendo.search_service.domain.product.search.sort.ProductSortField;
+import com.vendo.search_service.domain.product.search.sort.SortBody;
+import com.vendo.search_service.domain.product.search.sort.SortDirection;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 

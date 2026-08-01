@@ -4,10 +4,10 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.vendo.search_service.adapter.product.out.QueryContributor;
-import com.vendo.search_service.domain.product.ProductSearchItem;
-import com.vendo.search_service.domain.product.filter.AddressFilter;
-import com.vendo.search_service.domain.product.filter.AttributeFilter;
-import com.vendo.search_service.domain.product.filter.PriceRangeFilter;
+import com.vendo.search_service.domain.product.search.ProductSearchItem;
+import com.vendo.search_service.domain.product.search.filter.AddressFilter;
+import com.vendo.search_service.domain.product.search.filter.AttributeFilter;
+import com.vendo.search_service.domain.product.search.filter.PriceRangeFilter;
 import com.vendo.search_service.test_utils.ProductSearchItemDataBuilder;
 import org.junit.jupiter.api.Test;
 

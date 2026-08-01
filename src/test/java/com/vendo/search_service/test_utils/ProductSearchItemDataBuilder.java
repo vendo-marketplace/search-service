@@ -1,12 +1,12 @@
 package com.vendo.search_service.test_utils;
 
-import com.vendo.search_service.domain.product.ProductSearchItem;
-import com.vendo.search_service.domain.product.filter.AddressFilter;
-import com.vendo.search_service.domain.product.filter.AttributeFilter;
-import com.vendo.search_service.domain.product.filter.PriceRangeFilter;
-import com.vendo.search_service.domain.product.sort.ProductSortField;
-import com.vendo.search_service.domain.product.sort.SortBody;
-import com.vendo.search_service.domain.product.sort.SortDirection;
+import com.vendo.search_service.domain.product.search.ProductSearchItem;
+import com.vendo.search_service.domain.product.search.filter.AddressFilter;
+import com.vendo.search_service.domain.product.search.filter.AttributeFilter;
+import com.vendo.search_service.domain.product.search.filter.PriceRangeFilter;
+import com.vendo.search_service.domain.product.search.sort.ProductSortField;
+import com.vendo.search_service.domain.product.search.sort.SortBody;
+import com.vendo.search_service.domain.product.search.sort.SortDirection;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
