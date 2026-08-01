@@ -57,7 +57,7 @@ class ElasticProductResultsClient {
     }
 
     private static long getTotalPages(long totalItems, int size) {
-        if (totalItems == 0) return 0;
+        if (totalItems == 0 || size == 0) return 0;
         return totalItems / size;
     }
 
