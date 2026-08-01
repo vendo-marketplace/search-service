@@ -36,35 +36,28 @@ class ElasticProductResultsClient {
             return new SearchResponse<>(items, metadata);
         } catch (NoSuchIndexException e) {
             log.warn("Elasticsearch internal exception, returning empty list. Reason: ", e);
-            return new SearchResponse<>(List.of(), buildDefaultMetadata(searchItem));
+            return new SearchResponse<>(List.of(), null);
         } catch (UncategorizedElasticsearchException | ResourceNotFoundException | ResourceFailureException e) {
             throw new InternalSearchException(e);
         }
     }
 
     private static SearchMetadata buildMetadata(long totalItems, ProductSearchItem searchItem) {
-        return new SearchMetadata(
-                searchItem.page(),
-                searchItem.size(),
-                getTotalPages(totalItems, searchItem.size()),
-                totalItems,
-                getHasPrevious(searchItem.page()),
-                getHasNext(searchItem.page(), searchItem.size(), totalItems)
-        );
-    }
+        int page = searchItem == null ? 0 : searchItem.page();
+        int size = searchItem == null ? 0 : searchItem.size();
 
-    private static SearchMetadata buildDefaultMetadata(ProductSearchItem searchItem) {
         return new SearchMetadata(
-                searchItem.page(),
-                searchItem.size(),
-                0,
-                0,
-                false,
-                false
+                page,
+                size,
+                getTotalPages(totalItems, size),
+                totalItems,
+                getHasPrevious(page),
+                getHasNext(page, size, totalItems)
         );
     }
 
     private static long getTotalPages(long totalItems, int size) {
+        if (totalItems == 0) return 0;
         return totalItems / size;
     }
 
