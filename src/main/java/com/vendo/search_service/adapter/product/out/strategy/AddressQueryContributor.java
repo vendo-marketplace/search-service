@@ -18,11 +18,11 @@ class AddressQueryContributor implements QueryContributor {
 
     @Override
     public void contribute(ProductSearchItem request, List<Query> filters) {
-        if (request == null || request.addressFilter() == null) {
+        if (request == null || request.getAddressFilter() == null) {
             return;
         }
 
-        AddressFilter filter = request.addressFilter();
+        AddressFilter filter = request.getAddressFilter();
         if (StringUtils.isEmpty(filter.city())) {
             return;
         }

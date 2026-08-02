@@ -17,11 +17,11 @@ class AttributesQueryContributor implements QueryContributor {
 
     @Override
     public void contribute(ProductSearchItem request, List<Query> filters) {
-        if (request == null || request.attributeFilter() == null) {
+        if (request == null || request.getAttributeFilter() == null) {
             return;
         }
 
-        AttributeFilter filter = request.attributeFilter();
+        AttributeFilter filter = request.getAttributeFilter();
         if (CollectionUtils.isEmpty(filter.attributes())) {
             return;
         }

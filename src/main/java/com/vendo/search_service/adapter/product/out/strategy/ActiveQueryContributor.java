@@ -14,14 +14,14 @@ class ActiveQueryContributor implements QueryContributor {
 
     @Override
     public void contribute(ProductSearchItem request, List<Query> filters) {
-        if (request == null || request.active() == null) {
+        if (request == null || request.getActive() == null) {
             return;
         }
 
         Query query = Query.of(builder -> builder
                 .term(t -> t
                         .field(ACTIVE)
-                        .value(request.active())));
+                        .value(request.getActive())));
 
         filters.add(query);
     }

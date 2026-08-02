@@ -14,14 +14,14 @@ class IsNewQueryContributor implements QueryContributor {
 
     @Override
     public void contribute(ProductSearchItem request, List<Query> filters) {
-        if (request == null || request.isNew() == null) {
+        if (request == null || request.getIsNew() == null) {
             return;
         }
 
         Query query = Query.of(builder -> builder
                 .term(t -> t
                         .field(IS_NEW)
-                        .value(request.isNew())));
+                        .value(request.getIsNew())));
 
         filters.add(query);
     }

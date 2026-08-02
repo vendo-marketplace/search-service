@@ -5,10 +5,14 @@ import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.vendo.search_service.adapter.product.out.constants.ProductSearchFields;
 import com.vendo.search_service.adapter.product.out.persistence.ElasticProductSearchItem;
+import com.vendo.search_service.adapter.search.dto.SearchResponse;
 import com.vendo.search_service.domain.product.exception.InternalSearchException;
+import com.vendo.search_service.domain.product.search.ProductSearchItem;
+import com.vendo.search_service.domain.product.search.exception.PageNotFoundException;
 import com.vendo.search_service.domain.product.search.sort.ProductSortField;
 import com.vendo.search_service.domain.product.search.sort.SortBody;
 import com.vendo.search_service.domain.product.search.sort.SortDirection;
+import com.vendo.search_service.domain.search.SearchMetadata;
 import com.vendo.search_service.test_utils.ElasticProductSearchItemDataBuilder;
 import com.vendo.search_service.test_utils.ProductSearchItemDataBuilder;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,32 +65,165 @@ class ElasticProductSearchClientTest {
 
     @Test
     void search_shouldReturnProducts() {
-//        ElasticProductSearchItem item1 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-1").build();
-//        ElasticProductSearchItem item2 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-2").build();
-//        givenSearchReturns(item1, item2);
-//
-//        List<ElasticProductSearchItem> result = client.search("laptop", null);
-//
-//        assertThat(result).containsExactly(item1, item2);
-//        verify(operations).search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class));
+        ElasticProductSearchItem item1 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-1").build();
+        ElasticProductSearchItem item2 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-2").build();
+        givenSearchReturns(item1, item2);
+
+        SearchResponse<ElasticProductSearchItem> result = client.search("laptop", null);
+
+        assertThat(result).isNotNull();
+        assertThat(result.data()).isNotNull();
+        assertThat(result.data().size()).isEqualTo(2);
+        assertThat(result.data()).containsExactly(item1, item2);
+
+        verify(operations).search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class));
+    }
+
+    @Test
+    void search_shouldReturnValidMetadata_whenMiddleElement() {
+        ElasticProductSearchItem item1 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-1").build();
+        ElasticProductSearchItem item2 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-2").build();
+        ElasticProductSearchItem item3 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-3").build();
+        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().page(1).size(1).build();
+
+        SearchResponse<ElasticProductSearchItem> result = givenSearchMetadata(searchItem, item1, item2, item3);
+
+        assertThat(result.metadata()).isNotNull();
+        assertThat(result.metadata().size()).isEqualTo(searchItem.getSize());
+        assertThat(result.metadata().page()).isEqualTo(searchItem.getPage());
+        assertThat(result.metadata().totalPages()).isEqualTo(3);
+        assertThat(result.metadata().totalElements()).isEqualTo(3);
+        assertThat(result.metadata().hasPrevious()).isEqualTo(true);
+        assertThat(result.metadata().hasNext()).isEqualTo(true);
+
+        verify(operations).search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class));
+    }
+
+    @Test
+    void search_shouldReturnValidMetadata_whenLastElement() {
+        ElasticProductSearchItem item1 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-1").build();
+        ElasticProductSearchItem item2 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-2").build();
+        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().page(1).size(1).build();
+
+        SearchResponse<ElasticProductSearchItem> result = givenSearchMetadata(searchItem, item1, item2);
+
+        assertThat(result.metadata()).isNotNull();
+        assertThat(result.metadata().size()).isEqualTo(searchItem.getSize());
+        assertThat(result.metadata().page()).isEqualTo(searchItem.getPage());
+        assertThat(result.metadata().totalPages()).isEqualTo(2);
+        assertThat(result.metadata().totalElements()).isEqualTo(2);
+        assertThat(result.metadata().hasPrevious()).isEqualTo(true);
+        assertThat(result.metadata().hasNext()).isEqualTo(false);
+
+        verify(operations).search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class));
+    }
+
+    @Test
+    void search_shouldReturnValidMetadata_whenEmptyResult() {
+        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().page(1).size(1).build();
+
+        assertThatThrownBy(() -> givenSearchMetadata(searchItem))
+                .hasMessage("Page %d not found.".formatted(searchItem.getPage()))
+                .isInstanceOf(PageNotFoundException.class);
+
+        verify(operations).search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class));
+    }
+
+    @Test
+    void search_shouldReturnValidMetadata_whenAmountOfPagesAreEqualToAmountOfElements() {
+        ElasticProductSearchItem item1 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-1").build();
+        ElasticProductSearchItem item2 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-2").build();
+        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().size(1).build();
+
+        SearchResponse<ElasticProductSearchItem> result = givenSearchMetadata(searchItem, item1, item2);
+
+        assertThat(result.metadata()).isNotNull();
+        assertThat(result.metadata().size()).isEqualTo(searchItem.getSize());
+        assertThat(result.metadata().page()).isEqualTo(DEFAULT_PAGE);
+        assertThat(result.metadata().totalPages()).isEqualTo(2);
+        assertThat(result.metadata().totalElements()).isEqualTo(2);
+        assertThat(result.metadata().hasPrevious()).isEqualTo(false);
+        assertThat(result.metadata().hasNext()).isEqualTo(true);
+
+        verify(operations).search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class));
+    }
+
+    @Test
+    void search_shouldReturnValidMetadata_whenTotalElementsIsExactlyDivisibleByPageSize() {
+        ElasticProductSearchItem item1 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-1").build();
+        ElasticProductSearchItem item2 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-2").build();
+        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().size(2).build();
+
+        SearchResponse<ElasticProductSearchItem> result = givenSearchMetadata(searchItem, item1, item2);
+
+        assertThat(result.metadata()).isNotNull();
+        assertThat(result.metadata().size()).isEqualTo(searchItem.getSize());
+        assertThat(result.metadata().page()).isEqualTo(DEFAULT_PAGE);
+        assertThat(result.metadata().totalPages()).isEqualTo(1);
+        assertThat(result.metadata().totalElements()).isEqualTo(2);
+        assertThat(result.metadata().hasPrevious()).isEqualTo(false);
+        assertThat(result.metadata().hasNext()).isEqualTo(false);
+
+        verify(operations).search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class));
+    }
+
+    @Test
+    void search_shouldReturnValidMetadata_whenTotalElementsIsNotExactlyDivisibleByPageSize() {
+        ElasticProductSearchItem item1 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-1").build();
+        ElasticProductSearchItem item2 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-2").build();
+        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().size(3).build();
+
+        SearchResponse<ElasticProductSearchItem> result = givenSearchMetadata(searchItem, item1, item2);
+
+        assertThat(result.metadata()).isNotNull();
+        assertThat(result.metadata().size()).isEqualTo(searchItem.getSize());
+        assertThat(result.metadata().page()).isEqualTo(DEFAULT_PAGE);
+        assertThat(result.metadata().totalPages()).isEqualTo(1);
+        assertThat(result.metadata().totalElements()).isEqualTo(2);
+        assertThat(result.metadata().hasPrevious()).isEqualTo(false);
+        assertThat(result.metadata().hasNext()).isEqualTo(false);
+
+        verify(operations).search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class));
     }
 
     @Test
     void search_shouldReturnEmptyList_whenNothingFound() {
-//        givenSearchReturns();
-//
-//        List<ElasticProductSearchItem> result = client.search("laptop", null);
-//
-//        assertThat(result).isEmpty();
+        givenSearchReturns();
+
+        SearchResponse<ElasticProductSearchItem> result = client.search("laptop", null);
+
+        assertThat(result).isNotNull();
+        assertThat(result.data()).isNotNull();
+        assertThat(result.data()).isEmpty();
+
+        assertThat(result.metadata()).isNotNull();
+        assertThat(result.metadata().size()).isEqualTo(DEFAULT_SIZE);
+        assertThat(result.metadata().page()).isEqualTo(DEFAULT_PAGE);
+        assertThat(result.metadata().totalPages()).isEqualTo(0);
+        assertThat(result.metadata().totalElements()).isEqualTo(0);
+        assertThat(result.metadata().hasPrevious()).isEqualTo(false);
+        assertThat(result.metadata().hasNext()).isEqualTo(false);
     }
 
     @Test
     void search_shouldReturnEmptyList_whenIndexDoesNotExist() {
-//        when(operations.search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class))).thenThrow(new NoSuchIndexException("products"));
-//
-//        List<ElasticProductSearchItem> result = client.search("laptop", null);
-//
-//        assertThat(result).isEmpty();
+        when(operations.search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class))).thenThrow(new NoSuchIndexException("products"));
+
+        SearchResponse<ElasticProductSearchItem> result = client.search("laptop", null);
+
+        assertThat(result).isNotNull();
+        List<ElasticProductSearchItem> data = result.data();
+        assertThat(data).isNotNull();
+        assertThat(data).isEmpty();
+
+        SearchMetadata metadata = result.metadata();
+        assertThat(metadata).isNotNull();
+        assertThat(metadata.page()).isEqualTo(DEFAULT_PAGE);
+        assertThat(metadata.size()).isEqualTo(DEFAULT_SIZE);
+        assertThat(metadata.hasNext()).isEqualTo(false);
+        assertThat(metadata.hasPrevious()).isEqualTo(false);
+        assertThat(metadata.totalElements()).isEqualTo(0);
+        assertThat(metadata.totalPages()).isEqualTo(0);
     }
 
     @Test
@@ -96,7 +233,6 @@ class ElasticProductSearchClientTest {
         assertThatThrownBy(() -> client.search("laptop", null))
                 .isInstanceOf(InternalSearchException.class);
     }
-
 
     /**
      * Duplicate nested bool is not a bug here. It is necessary because Elastic
@@ -242,11 +378,11 @@ class ElasticProductSearchClientTest {
     void search_shouldUseProvidedPageAndSize() {
         givenSearchReturns();
 
-        client.search("laptop", ProductSearchItemDataBuilder.empty().page(2).size(50).build());
+        client.search("laptop", ProductSearchItemDataBuilder.empty().page(0).size(1).build());
 
         Pageable pageable = captureQuery().getPageable();
-        assertThat(pageable.getPageNumber()).isEqualTo(2);
-        assertThat(pageable.getPageSize()).isEqualTo(50);
+        assertThat(pageable.getPageNumber()).isEqualTo(0);
+        assertThat(pageable.getPageSize()).isEqualTo(1);
     }
 
 
@@ -260,6 +396,7 @@ class ElasticProductSearchClientTest {
         }).toList();
 
         when(hits.stream()).thenReturn(hitList.stream());
+        when(hits.getTotalHits()).thenReturn(Long.valueOf(items.length));
         when(operations.search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class))).thenReturn(hits);
     }
 
@@ -267,5 +404,22 @@ class ElasticProductSearchClientTest {
         ArgumentCaptor<org.springframework.data.elasticsearch.core.query.Query> captor = ArgumentCaptor.forClass(org.springframework.data.elasticsearch.core.query.Query.class);
         verify(operations).search(captor.capture(), eq(ElasticProductSearchItem.class));
         return (NativeQuery) captor.getValue();
+    }
+
+    private SearchResponse<ElasticProductSearchItem> givenSearchMetadata(ProductSearchItem searchItem, ElasticProductSearchItem... items) {
+        givenSearchReturns(items);
+
+        SearchResponse<ElasticProductSearchItem> result = client.search("laptop", searchItem);
+
+        assertThat(result).isNotNull();
+        assertThat(result.data()).isNotNull();
+        assertThat(result.data().size()).isEqualTo(items.length);
+        assertThat(result.data()).containsExactly(items);
+
+        assertThat(result.metadata()).isNotNull();
+
+        verify(operations).search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class));
+
+        return result;
     }
 }

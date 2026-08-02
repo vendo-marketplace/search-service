@@ -36,7 +36,7 @@ public class FiltersQueryContributorTest {
         assertThat(query).isNotNull();
         assertThat(query.isTerm()).isTrue();
         assertThat(query.term().field()).isEqualTo(CATEGORY_ID);
-        assertThat(query.term().value().stringValue()).isEqualTo(searchItem.categoryId());
+        assertThat(query.term().value().stringValue()).isEqualTo(searchItem.getCategoryId());
     }
 
     @Test
@@ -87,12 +87,12 @@ public class FiltersQueryContributorTest {
         Query cityTermQuery = queries.get(0);
         assertThat(cityTermQuery.isTerm()).isTrue();
         assertThat(cityTermQuery.term().field()).isEqualTo(ADDRESS_CITY);
-        assertThat(cityTermQuery.term().value().stringValue()).isEqualTo(searchItem.addressFilter().city());
+        assertThat(cityTermQuery.term().value().stringValue()).isEqualTo(searchItem.getAddressFilter().city());
 
         Query regionTermQuery = queries.get(1);
         assertThat(regionTermQuery.isTerm()).isTrue();
         assertThat(regionTermQuery.term().field()).isEqualTo(ADDRESS_REGION);
-        assertThat(regionTermQuery.term().value().stringValue()).isEqualTo(searchItem.addressFilter().region());
+        assertThat(regionTermQuery.term().value().stringValue()).isEqualTo(searchItem.getAddressFilter().region());
     }
 
     @Test
@@ -105,7 +105,7 @@ public class FiltersQueryContributorTest {
 
         assertThat(query.isTerm()).isTrue();
         assertThat(query.term().field()).isEqualTo(ADDRESS_CITY);
-        assertThat(query.term().value().stringValue()).isEqualTo(searchItem.addressFilter().city());
+        assertThat(query.term().value().stringValue()).isEqualTo(searchItem.getAddressFilter().city());
     }
 
     @Test

@@ -15,14 +15,14 @@ class CategoryQueryContributor implements QueryContributor {
 
     @Override
     public void contribute(ProductSearchItem request, List<Query> filters) {
-        if (request == null || StringUtils.isEmpty(request.categoryId())) {
+        if (request == null || StringUtils.isEmpty(request.getCategoryId())) {
             return;
         }
 
         Query query = Query.of(builder -> builder
                 .term(t -> t
                         .field(CATEGORY_ID)
-                        .value(request.categoryId())));
+                        .value(request.getCategoryId())));
 
         filters.add(query);
     }
