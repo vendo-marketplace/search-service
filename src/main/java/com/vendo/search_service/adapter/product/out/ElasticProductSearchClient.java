@@ -160,7 +160,7 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
     }
 
     private void throwIfPageNotFound(int page, long totalPages) {
-        if (page >= totalPages && page > ProductSearchItem.FIRST_ELEMENT) {
+        if (page >= totalPages && page > ProductSearchItem.EMPTY) {
             throw new PageNotFoundException("Page %d not found.".formatted(page));
         }
     }

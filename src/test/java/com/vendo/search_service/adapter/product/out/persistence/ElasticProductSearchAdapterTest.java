@@ -2,7 +2,9 @@ package com.vendo.search_service.adapter.product.out.persistence;
 
 import com.vendo.search_service.adapter.product.out.mapper.ElasticProductMapper;
 import com.vendo.search_service.adapter.search.SearchRepository;
+import com.vendo.search_service.adapter.search.dto.SearchResponse;
 import com.vendo.search_service.domain.product.Product;
+import com.vendo.search_service.domain.product.search.ProductSearchData;
 import com.vendo.search_service.domain.product.search.ProductSearchItem;
 import com.vendo.search_service.test_utils.ElasticProductSearchItemDataBuilder;
 import com.vendo.search_service.test_utils.ProductDataBuilder;
@@ -35,41 +37,44 @@ class ElasticProductSearchAdapterTest {
 
     @Test
     void search_shouldDelegateToRepositoryAndMapResult() {
-//        String q = "laptop";
-//        ProductSearchItem searchItem = ProductSearchItemDataBuilder.withAllFields().build();
-//        List<ElasticProductSearchItem> entities = List.of(ElasticProductSearchItemDataBuilder.withAllFields().build());
-//        List<Product> products = List.of(ProductDataBuilder.withAllFields().build());
-//
-//        when(repository.search(q, searchItem)).thenReturn(entities);
-//        when(mapper.toProducts(entities)).thenReturn(products);
-//
-//        List<Product> result = adapter.search(q, searchItem);
-//
-//        assertThat(result).isEqualTo(products);
-//        verify(repository).search(q, searchItem);
-//        verify(mapper).toProducts(entities);
+        String q = "laptop";
+        ProductSearchItem searchItem = ProductSearchItemDataBuilder.withAllFields().build();
+        List<ElasticProductSearchItem> entities = List.of(ElasticProductSearchItemDataBuilder.withAllFields().build());
+        List<Product> products = List.of(ProductDataBuilder.withAllFields().build());
+        SearchResponse<ElasticProductSearchItem> searchResponse = new SearchResponse<>(entities, null);
+
+        when(repository.search(q, searchItem)).thenReturn(searchResponse);
+        when(mapper.toProducts(entities)).thenReturn(products);
+
+        ProductSearchData data = adapter.search(q, searchItem);
+
+        assertThat(data).isNotNull();
+        assertThat(data.data()).isEqualTo(products);
+        verify(repository).search(q, searchItem);
+        verify(mapper).toProducts(entities);
     }
 
     @Test
     void search_shouldReturnEmptyList_whenRepositoryReturnsEmpty() {
-//        when(repository.search(any(), any())).thenReturn(List.of());
-//        when(mapper.toProducts(anyList())).thenReturn(List.of());
-//
-//        List<Product> result = adapter.search("laptop", ProductSearchItemDataBuilder.empty().build());
-//
-//        assertThat(result).isEmpty();
-//        verify(repository).search(any(), any());
-//        verify(mapper).toProducts(anyList());
+        when(repository.search(any(), any())).thenReturn(new SearchResponse<>(List.of(), null));
+        when(mapper.toProducts(anyList())).thenReturn(List.of());
+
+        ProductSearchData data = adapter.search("laptop", ProductSearchItemDataBuilder.empty().build());
+
+        assertThat(data).isNotNull();
+        assertThat(data.data()).isEmpty();
+        verify(repository).search(any(), any());
+        verify(mapper).toProducts(anyList());
     }
 
     @Test
     void search_shouldPassNullQueryThroughToRepository() {
-//        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().build();
-//        when(repository.search(null, searchItem)).thenReturn(List.of());
-//        when(mapper.toProducts(anyList())).thenReturn(List.of());
-//
-//        adapter.search(null, searchItem);
-//
-//        verify(repository).search(null, searchItem);
+        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().build();
+        when(repository.search(null, searchItem)).thenReturn(new SearchResponse<>(List.of(), null));
+        when(mapper.toProducts(anyList())).thenReturn(List.of());
+
+        adapter.search(null, searchItem);
+
+        verify(repository).search(null, searchItem);
     }
 }

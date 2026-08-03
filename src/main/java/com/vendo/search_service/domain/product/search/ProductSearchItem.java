@@ -24,8 +24,8 @@ public class ProductSearchItem {
     private Integer size;
     private Integer page;
 
-    public static final int FIRST_ELEMENT = 0;
-    private static final int EMPTY = 0, ONE_ELEMENT = 1;
+    public static final int EMPTY = 0;
+    private static final int ONE_ELEMENT = 1;
 
     public static long getTotalPages(long totalItems, int size) {
         if (totalItems == EMPTY || size == EMPTY) {
@@ -36,7 +36,7 @@ public class ProductSearchItem {
     }
 
     public static boolean getHasPrevious(int page) {
-        return page > FIRST_ELEMENT;
+        return page > EMPTY;
     }
 
     public static boolean getHasNext(int page, int size, long totalItems) {
