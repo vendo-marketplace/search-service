@@ -119,6 +119,28 @@ class ElasticProductSearchClientTest {
     }
 
     @Test
+    void search_shouldReturnValidMetadata_when() {
+        ElasticProductSearchItem item1 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-1").build();
+        ElasticProductSearchItem item2 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-2").build();
+        ElasticProductSearchItem item3 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-3").build();
+        ElasticProductSearchItem item4 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-4").build();
+        ElasticProductSearchItem item5 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-5").build();
+        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().page(0).size(3).build();
+
+        SearchResponse<ElasticProductSearchItem> result = givenSearchMetadata(searchItem, item1, item2, item3, item4, item5);
+
+        assertThat(result.metadata()).isNotNull();
+        assertThat(result.metadata().size()).isEqualTo(searchItem.getSize());
+        assertThat(result.metadata().page()).isEqualTo(searchItem.getPage());
+        assertThat(result.metadata().totalPages()).isEqualTo(2);
+        assertThat(result.metadata().totalElements()).isEqualTo(5);
+        assertThat(result.metadata().hasPrevious()).isEqualTo(false);
+        assertThat(result.metadata().hasNext()).isEqualTo(true);
+
+        verify(operations).search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class));
+    }
+
+    @Test
     void search_shouldReturnValidMetadata_whenEmptyResult() {
         ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().page(1).size(1).build();
 

@@ -28,8 +28,11 @@ public class ProductSearchItem {
     private static final int EMPTY = 0, ONE_ELEMENT = 1;
 
     public static long getTotalPages(long totalItems, int size) {
-        if (totalItems == EMPTY || size == EMPTY) return EMPTY;
-        return totalItems < size ? ONE_ELEMENT : totalItems / size;
+        if (totalItems == EMPTY || size == EMPTY) {
+            return EMPTY;
+        }
+
+        return (totalItems + size - ONE_ELEMENT) / size;
     }
 
     public static boolean getHasPrevious(int page) {
