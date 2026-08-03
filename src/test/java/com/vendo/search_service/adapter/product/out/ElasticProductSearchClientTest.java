@@ -119,7 +119,7 @@ class ElasticProductSearchClientTest {
     }
 
     @Test
-    void search_shouldReturnValidMetadata_when() {
+    void search_shouldReturnValidMetadata_whenTwoPages() {
         ElasticProductSearchItem item1 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-1").build();
         ElasticProductSearchItem item2 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-2").build();
         ElasticProductSearchItem item3 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-3").build();
@@ -136,6 +136,20 @@ class ElasticProductSearchClientTest {
         assertThat(result.metadata().totalElements()).isEqualTo(5);
         assertThat(result.metadata().hasPrevious()).isEqualTo(false);
         assertThat(result.metadata().hasNext()).isEqualTo(true);
+
+        verify(operations).search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class));
+    }
+
+    @Test
+    void search_shouldReturnValidMetadata_when() {
+        ElasticProductSearchItem item1 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-1").build();
+        ElasticProductSearchItem item2 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-2").build();
+        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().page(2).size(1).build();
+
+        givenSearchReturns(item1, item2);
+        assertThatThrownBy(() -> client.search("laptop", searchItem))
+                .isInstanceOf(PageNotFoundException.class)
+                .hasMessage("Page %d not found.".formatted(searchItem.getPage()));
 
         verify(operations).search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class));
     }

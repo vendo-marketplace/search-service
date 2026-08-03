@@ -135,7 +135,7 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
             List<ElasticProductSearchItem> items = hits.stream().map(SearchHit::getContent).toList();
             SearchMetadata metadata = buildMetadata(hits.getTotalHits(), searchItem);
 
-            throwIfPageNotFound(metadata.page(), metadata.totalElements());
+            throwIfPageNotFound(metadata.page(), metadata.totalPages());
             return new SearchResponse<>(items, metadata);
         } catch (NoSuchIndexException e) {
             log.warn("Elasticsearch internal exception, returning empty list. Reason: ", e);
