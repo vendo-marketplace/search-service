@@ -1,4 +1,4 @@
-package com.vendo.search_service.domain.product.filter;
+package com.vendo.search_service.domain.product.search.filter;
 
 import java.math.BigDecimal;
 

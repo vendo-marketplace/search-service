@@ -4,8 +4,8 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.vendo.core_lib.utils.CollectionUtils;
 import com.vendo.search_service.adapter.product.out.QueryContributor;
-import com.vendo.search_service.domain.product.ProductSearchItem;
-import com.vendo.search_service.domain.product.filter.AttributeFilter;
+import com.vendo.search_service.domain.product.search.ProductSearchItem;
+import com.vendo.search_service.domain.product.search.filter.AttributeFilter;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,11 +17,11 @@ class AttributesQueryContributor implements QueryContributor {
 
     @Override
     public void contribute(ProductSearchItem request, List<Query> filters) {
-        if (request == null || request.attributeFilter() == null) {
+        if (request == null || request.getAttributeFilter() == null) {
             return;
         }
 
-        AttributeFilter filter = request.attributeFilter();
+        AttributeFilter filter = request.getAttributeFilter();
         if (CollectionUtils.isEmpty(filter.attributes())) {
             return;
         }

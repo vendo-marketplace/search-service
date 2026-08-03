@@ -1,6 +1,6 @@
 package com.vendo.search_service.adapter.product.in.dto;
 
-import com.vendo.search_service.domain.product.sort.SortBody;
+import com.vendo.search_service.domain.product.search.sort.SortBody;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 

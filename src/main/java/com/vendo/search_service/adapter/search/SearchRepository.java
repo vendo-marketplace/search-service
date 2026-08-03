@@ -1,9 +1,9 @@
 package com.vendo.search_service.adapter.search;
 
-import java.util.List;
+import com.vendo.search_service.adapter.search.dto.SearchResponse;
 
 public interface SearchRepository<T, R> {
 
-    List<T> search(String q, R request);
+    SearchResponse<T> search(String q, R request);
 
 }

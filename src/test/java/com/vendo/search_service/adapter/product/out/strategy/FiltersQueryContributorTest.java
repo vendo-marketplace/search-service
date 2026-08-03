@@ -4,10 +4,10 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.vendo.search_service.adapter.product.out.QueryContributor;
-import com.vendo.search_service.domain.product.ProductSearchItem;
-import com.vendo.search_service.domain.product.filter.AddressFilter;
-import com.vendo.search_service.domain.product.filter.AttributeFilter;
-import com.vendo.search_service.domain.product.filter.PriceRangeFilter;
+import com.vendo.search_service.domain.product.search.ProductSearchItem;
+import com.vendo.search_service.domain.product.search.filter.AddressFilter;
+import com.vendo.search_service.domain.product.search.filter.AttributeFilter;
+import com.vendo.search_service.domain.product.search.filter.PriceRangeFilter;
 import com.vendo.search_service.test_utils.ProductSearchItemDataBuilder;
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +36,7 @@ public class FiltersQueryContributorTest {
         assertThat(query).isNotNull();
         assertThat(query.isTerm()).isTrue();
         assertThat(query.term().field()).isEqualTo(CATEGORY_ID);
-        assertThat(query.term().value().stringValue()).isEqualTo(searchItem.categoryId());
+        assertThat(query.term().value().stringValue()).isEqualTo(searchItem.getCategoryId());
     }
 
     @Test
@@ -87,12 +87,12 @@ public class FiltersQueryContributorTest {
         Query cityTermQuery = queries.get(0);
         assertThat(cityTermQuery.isTerm()).isTrue();
         assertThat(cityTermQuery.term().field()).isEqualTo(ADDRESS_CITY);
-        assertThat(cityTermQuery.term().value().stringValue()).isEqualTo(searchItem.addressFilter().city());
+        assertThat(cityTermQuery.term().value().stringValue()).isEqualTo(searchItem.getAddressFilter().city());
 
         Query regionTermQuery = queries.get(1);
         assertThat(regionTermQuery.isTerm()).isTrue();
         assertThat(regionTermQuery.term().field()).isEqualTo(ADDRESS_REGION);
-        assertThat(regionTermQuery.term().value().stringValue()).isEqualTo(searchItem.addressFilter().region());
+        assertThat(regionTermQuery.term().value().stringValue()).isEqualTo(searchItem.getAddressFilter().region());
     }
 
     @Test
@@ -105,7 +105,7 @@ public class FiltersQueryContributorTest {
 
         assertThat(query.isTerm()).isTrue();
         assertThat(query.term().field()).isEqualTo(ADDRESS_CITY);
-        assertThat(query.term().value().stringValue()).isEqualTo(searchItem.addressFilter().city());
+        assertThat(query.term().value().stringValue()).isEqualTo(searchItem.getAddressFilter().city());
     }
 
     @Test

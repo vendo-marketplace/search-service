@@ -6,7 +6,10 @@ import com.vendo.search_service.adapter.product.in.dto.AttributeFilterRequest.At
 import com.vendo.search_service.adapter.product.in.dto.PriceRangeFilterRequest;
 import com.vendo.search_service.adapter.product.in.dto.ProductSearchRequest;
 import com.vendo.search_service.domain.product.Product;
-import com.vendo.search_service.domain.product.ProductSearchItem;
+import com.vendo.search_service.domain.product.search.ProductSearchData;
+import com.vendo.search_service.domain.product.search.ProductSearchItem;
+import com.vendo.search_service.domain.product.search.filter.PriceRangeFilter;
+import com.vendo.search_service.domain.search.SearchMetadata;
 import com.vendo.search_service.port.ProductSearchUseCase;
 import com.vendo.search_service.test_utils.ProductDataBuilder;
 import com.vendo.search_service.test_utils.ProductSearchItemDataBuilder;
@@ -15,6 +18,7 @@ import com.vendo.security_lib.exception.ExceptionResponse;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -38,6 +42,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class ProductSearchControllerIntegrationTest {
 
+    @Value("${product.search.size}")
+    private int SIZE;
+
+    @Value("${product.search.page}")
+    private int PAGE;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -54,27 +64,25 @@ class ProductSearchControllerIntegrationTest {
         void search_shouldReturnProducts() throws Exception {
             ProductSearchRequest request = ProductSearchRequestDataBuilder.withAllFields().build();
             ProductSearchItem item = ProductSearchItemDataBuilder.withAllFields().build();
+            SearchMetadata searchMetadata = new SearchMetadata(PAGE, SIZE, 1, 1, false, false);
             List<Product> products = List.of(ProductDataBuilder.withAllFields().id("p-1").build());
 
-            when(productSearchUseCase.search("laptop", item)).thenReturn(products);
+            when(productSearchUseCase.search("laptop", item)).thenReturn(new ProductSearchData(products, searchMetadata));
 
-            mockMvc.perform(post("/search")
+            String content = mockMvc.perform(post("/search")
                             .param("q", "laptop")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data").isArray())
-                    .andExpect(jsonPath("$.data[0].id").value("p-1"))
-                    .andExpect(jsonPath("$.data[0].title").value("Gaming Laptop"))
-                    .andExpect(jsonPath("$.data[0].isNew").value("true"))
-                    .andExpect(jsonPath("$.data[0].address.region")
-                            .value(products.get(0).address().region()))
-                    .andExpect(jsonPath("$.data[0].address.city")
-                            .value(products.get(0).address().city()))
-                    .andExpect(jsonPath("$.data[0].address.location.lat")
-                            .value(products.get(0).address().location().lat()))
-                    .andExpect(jsonPath("$.data[0].address.location.lon")
-                            .value(products.get(0).address().location().lon()));
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+            assertThat(content).isNotBlank();
+
+            ProductSearchData searchData = objectMapper.readValue(content, ProductSearchData.class);
+            assertThat(searchData).isNotNull();
+            assertThat(searchData.data()).isNotNull();
+            assertThat(searchData.data().size()).isEqualTo(1);
+            assertThat(searchData.metadata()).isEqualTo(searchMetadata);
+            assertThat(searchData.data()).isEqualTo(products);
 
             verify(productSearchUseCase).search("laptop", item);
         }
@@ -84,7 +92,7 @@ class ProductSearchControllerIntegrationTest {
             ProductSearchRequest request = ProductSearchRequestDataBuilder.withAllFields().build();
             ProductSearchItem item = ProductSearchItemDataBuilder.withAllFields().build();
 
-            when(productSearchUseCase.search("laptop", item)).thenReturn(List.of());
+            when(productSearchUseCase.search("laptop", item)).thenReturn(new ProductSearchData(List.of(), null));
 
             mockMvc.perform(post("/search")
                             .param("q", "laptop")
@@ -97,7 +105,7 @@ class ProductSearchControllerIntegrationTest {
 
         @Test
         void search_shouldReturnOk_whenNoQueryParamAndNoBody() throws Exception {
-            when(productSearchUseCase.search(isNull(), isNull())).thenReturn(List.of());
+            when(productSearchUseCase.search(isNull(), isNull())).thenReturn(new ProductSearchData(List.of(), null));
 
             mockMvc.perform(post("/search"))
                     .andExpect(status().isOk());
@@ -183,10 +191,10 @@ class ProductSearchControllerIntegrationTest {
                 .priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.ZERO, null))
                 .build();
         ProductSearchItem item = ProductSearchItemDataBuilder.empty()
-                .priceRangeFilter(new com.vendo.search_service.domain.product.filter.PriceRangeFilter(BigDecimal.ZERO, null))
+                .priceRangeFilter(new PriceRangeFilter(BigDecimal.ZERO, null))
                 .build();
 
-        when(productSearchUseCase.search(isNull(), eq(item))).thenReturn(List.of());
+        when(productSearchUseCase.search(isNull(), eq(item))).thenReturn(new ProductSearchData(List.of(), null));
 
         mockMvc.perform(post("/search")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -243,5 +251,4 @@ class ProductSearchControllerIntegrationTest {
         assertThat(exceptionResponse.getPath()).isEqualTo("/search");
         assertThat(exceptionResponse.getCode()).isEqualTo(400);
     }
-
 }
