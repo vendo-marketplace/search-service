@@ -129,7 +129,7 @@ class ElasticProductSearchClientTest {
         }
 
         @Test
-        void search_shouldReturnPageNotFound_whenPageHigherThanTotalElements() {
+        void search_shouldThrowPageNotFoundException_whenPageIsOutOfRange() {
             ElasticProductSearchItem item1 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-1").build();
             ElasticProductSearchItem item2 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-2").build();
             ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().page(2).size(1).build();
