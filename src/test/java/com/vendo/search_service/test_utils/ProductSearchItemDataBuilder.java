@@ -42,8 +42,8 @@ public class ProductSearchItemDataBuilder {
                         new AttributeFilter.Attribute("color", List.of("red", "blue"))
                 )))
                 .priceRangeFilter(new PriceRangeFilter(BigDecimal.TEN, BigDecimal.valueOf(100)))
-                .size(20)
-                .page(0);
+                .size(25)
+                .page(1);
     }
 
     public ProductSearchItem build() {

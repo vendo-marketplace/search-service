@@ -24,23 +24,19 @@ public class ProductSearchItem {
     private Integer size;
     private Integer page;
 
-    public static final int EMPTY = 0;
-    private static final int ONE_ELEMENT = 1;
+    public static final int EMPTY = 0, FIRST_ELEMENT = 1;
 
     public static long getTotalPages(long totalItems, int size) {
-        if (totalItems == EMPTY || size == EMPTY) {
-            return EMPTY;
-        }
-
-        return (totalItems + size - ONE_ELEMENT) / size;
+        if (totalItems == EMPTY) return EMPTY;
+        return (totalItems + size - FIRST_ELEMENT) / size;
     }
 
     public static boolean getHasPrevious(int page) {
-        return page > EMPTY;
+        return page > FIRST_ELEMENT;
     }
 
     public static boolean getHasNext(int page, int size, long totalItems) {
-        return (page + ONE_ELEMENT) < getTotalPages(totalItems, size);
+        return page < getTotalPages(totalItems, size);
     }
 
     public static int getPage(int defaultPage, ProductSearchItem searchItem) {

@@ -9,7 +9,6 @@ import com.vendo.search_service.adapter.search.SearchRepository;
 import com.vendo.search_service.adapter.search.dto.SearchResponse;
 import com.vendo.search_service.domain.product.exception.InternalSearchException;
 import com.vendo.search_service.domain.product.search.ProductSearchItem;
-import com.vendo.search_service.domain.product.search.exception.PageNotFoundException;
 import com.vendo.search_service.domain.product.search.sort.ProductSortField;
 import com.vendo.search_service.domain.product.search.sort.SortBody;
 import com.vendo.search_service.domain.search.SearchMetadata;
@@ -135,7 +134,6 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
             List<ElasticProductSearchItem> items = hits.stream().map(SearchHit::getContent).toList();
             SearchMetadata metadata = buildMetadata(hits.getTotalHits(), searchItem);
 
-            throwIfPageNotFound(metadata.page(), metadata.totalPages());
             return new SearchResponse<>(items, metadata);
         } catch (NoSuchIndexException e) {
             log.warn("Elasticsearch internal exception, returning empty list. Reason: ", e);
@@ -157,11 +155,5 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
                 ProductSearchItem.getHasPrevious(page),
                 ProductSearchItem.getHasNext(page, size, totalItems)
         );
-    }
-
-    private void throwIfPageNotFound(int page, long totalPages) {
-        if (page >= totalPages && page > ProductSearchItem.EMPTY) {
-            throw new PageNotFoundException("Page %d not found.".formatted(page));
-        }
     }
 }

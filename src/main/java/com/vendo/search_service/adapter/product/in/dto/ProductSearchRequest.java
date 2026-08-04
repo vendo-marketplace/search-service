@@ -21,7 +21,7 @@ public record ProductSearchRequest(
 
         @Min(value = 1, message = "Page size must not be less than one.")
         Integer size,
-        @Min(value = 0, message = "Page must not be less than zero.")
+        @Min(value = 1, message = "Page must not be less than one.")
         Integer page
 ) {
 }

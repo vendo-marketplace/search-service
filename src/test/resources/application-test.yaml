@@ -8,5 +8,5 @@ spring:
 
 product:
   search:
-    size: 20
-    page: 0
+    page: 1
+    size: 25

@@ -43,8 +43,8 @@ public class ProductSearchRequestDataBuilder {
                         new AttributeRequest("color", List.of("red", "blue"))
                 )))
                 .priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.TEN, BigDecimal.valueOf(100)))
-                .size(20)
-                .page(0);
+                .size(25)
+                .page(1);
     }
 
     public ProductSearchRequest build() {
