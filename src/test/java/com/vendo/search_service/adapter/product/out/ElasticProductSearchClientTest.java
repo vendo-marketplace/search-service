@@ -414,10 +414,10 @@ class ElasticProductSearchClientTest {
         }
 
         @Test
-        void search_shouldUseProvidedPageAndSize() {
+        void search_shouldConvertPageToZeroAsFirstParameter_whenProvidedPageAndSize() {
             givenSearchReturns();
 
-            client.search("laptop", ProductSearchItemDataBuilder.empty().page(0).size(1).build());
+            client.search("laptop", ProductSearchItemDataBuilder.empty().page(1).size(1).build());
 
             Pageable pageable = captureQuery().getPageable();
             assertThat(pageable.getPageNumber()).isEqualTo(0);

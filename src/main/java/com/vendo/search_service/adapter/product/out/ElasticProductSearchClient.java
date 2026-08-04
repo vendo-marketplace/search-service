@@ -111,7 +111,8 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
     }
 
     private void withPage(NativeQueryBuilder queryBuilder, ProductSearchItem searchItem) {
-        PageRequest pageable = PageRequest.of(ProductSearchItem.getPage(DEFAULT_PAGE - ProductSearchItem.FIRST_ELEMENT, searchItem), ProductSearchItem.getSize(DEFAULT_SIZE, searchItem));
+        int page = ProductSearchItem.getPage(DEFAULT_PAGE, searchItem, false);
+        PageRequest pageable = PageRequest.of(page, ProductSearchItem.getSize(DEFAULT_SIZE, searchItem));
         queryBuilder.withPageable(pageable);
     }
 
@@ -144,7 +145,7 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
     }
 
     private SearchMetadata buildMetadata(long totalItems, ProductSearchItem searchItem) {
-        int page = ProductSearchItem.getPage(DEFAULT_PAGE, searchItem);
+        int page = ProductSearchItem.getPage(DEFAULT_PAGE, searchItem, true);
         int size = ProductSearchItem.getSize(DEFAULT_SIZE, searchItem);
 
         return new SearchMetadata(

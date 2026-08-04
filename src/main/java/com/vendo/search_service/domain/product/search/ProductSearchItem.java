@@ -39,10 +39,12 @@ public class ProductSearchItem {
         return page < getTotalPages(totalItems, size);
     }
 
-    public static int getPage(int defaultPage, ProductSearchItem searchItem) {
-        return (searchItem != null && searchItem.getPage() != null)
+    public static int getPage(int defaultPage, ProductSearchItem searchItem, boolean oneBased) {
+        int page = (searchItem != null && searchItem.getPage() != null)
                 ? searchItem.getPage()
                 : defaultPage;
+
+        return oneBased ? page : page - FIRST_ELEMENT;
     }
 
     public static int getSize(int defaultSize, ProductSearchItem searchItem) {
