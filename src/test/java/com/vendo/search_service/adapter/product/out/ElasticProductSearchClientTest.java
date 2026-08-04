@@ -398,7 +398,7 @@ class ElasticProductSearchClientTest {
             client.search("laptop", null);
 
             Pageable pageable = captureQuery().getPageable();
-            assertThat(pageable.getPageNumber()).isEqualTo(DEFAULT_PAGE);
+            assertThat(pageable.getPageNumber()).isEqualTo(DEFAULT_PAGE - ProductSearchItem.FIRST_ELEMENT);
             assertThat(pageable.getPageSize()).isEqualTo(DEFAULT_SIZE);
         }
 
@@ -409,7 +409,7 @@ class ElasticProductSearchClientTest {
             client.search("laptop", ProductSearchItemDataBuilder.empty().build());
 
             Pageable pageable = captureQuery().getPageable();
-            assertThat(pageable.getPageNumber()).isEqualTo(DEFAULT_PAGE);
+            assertThat(pageable.getPageNumber()).isEqualTo(DEFAULT_PAGE - ProductSearchItem.FIRST_ELEMENT);
             assertThat(pageable.getPageSize()).isEqualTo(DEFAULT_SIZE);
         }
 
