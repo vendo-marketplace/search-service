@@ -1,7 +1,6 @@
 package com.vendo.search_service.adapter.product.in.exception;
 
 import com.vendo.search_service.domain.product.exception.InternalSearchException;
-import com.vendo.search_service.domain.product.search.exception.PageNotFoundException;
 import com.vendo.security_lib.exception.ExceptionResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -23,16 +22,6 @@ public class ProductSearchExceptionHandler {
                 .path(request.getRequestURI())
                 .build();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exceptionResponse);
-    }
-
-    @ExceptionHandler(PageNotFoundException.class)
-    public ResponseEntity<ExceptionResponse> handlePageNotFoundException(PageNotFoundException e, HttpServletRequest request) {
-        ExceptionResponse exceptionResponse = ExceptionResponse.builder()
-                .message(e.getMessage())
-                .code(HttpStatus.NOT_FOUND.value())
-                .path(request.getRequestURI())
-                .build();
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exceptionResponse);
     }
 
 }

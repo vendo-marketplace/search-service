@@ -8,7 +8,6 @@ import com.vendo.search_service.adapter.product.out.persistence.ElasticProductSe
 import com.vendo.search_service.adapter.search.dto.SearchResponse;
 import com.vendo.search_service.domain.product.exception.InternalSearchException;
 import com.vendo.search_service.domain.product.search.ProductSearchItem;
-import com.vendo.search_service.domain.product.search.exception.PageNotFoundException;
 import com.vendo.search_service.domain.product.search.sort.ProductSortField;
 import com.vendo.search_service.domain.product.search.sort.SortBody;
 import com.vendo.search_service.domain.product.search.sort.SortDirection;
@@ -46,8 +45,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ElasticProductSearchClientTest {
 
-    private static final int DEFAULT_SIZE = 20;
-    private static final int DEFAULT_PAGE = 0;
+    private static final int DEFAULT_SIZE = 25;
+    private static final int DEFAULT_PAGE = 1;
 
     @Mock
     private ElasticsearchOperations operations;
@@ -72,7 +71,7 @@ class ElasticProductSearchClientTest {
             ElasticProductSearchItem item1 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-1").build();
             ElasticProductSearchItem item2 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-2").build();
             ElasticProductSearchItem item3 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-3").build();
-            ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().page(1).size(1).build();
+            ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().page(2).size(1).build();
 
             SearchResponse<ElasticProductSearchItem> result = givenSearchMetadata(searchItem, item1, item2, item3);
 
@@ -91,7 +90,7 @@ class ElasticProductSearchClientTest {
         void search_shouldReturnValidMetadata_whenLastElement() {
             ElasticProductSearchItem item1 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-1").build();
             ElasticProductSearchItem item2 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-2").build();
-            ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().page(1).size(1).build();
+            ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().page(2).size(1).build();
 
             SearchResponse<ElasticProductSearchItem> result = givenSearchMetadata(searchItem, item1, item2);
 
@@ -113,7 +112,7 @@ class ElasticProductSearchClientTest {
             ElasticProductSearchItem item3 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-3").build();
             ElasticProductSearchItem item4 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-4").build();
             ElasticProductSearchItem item5 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-5").build();
-            ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().page(0).size(3).build();
+            ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().page(1).size(3).build();
 
             SearchResponse<ElasticProductSearchItem> result = givenSearchMetadata(searchItem, item1, item2, item3, item4, item5);
 
@@ -129,26 +128,22 @@ class ElasticProductSearchClientTest {
         }
 
         @Test
-        void search_shouldThrowPageNotFoundException_whenPageIsOutOfRange() {
-            ElasticProductSearchItem item1 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-1").build();
-            ElasticProductSearchItem item2 = ElasticProductSearchItemDataBuilder.withAllFields().id("p-2").build();
-            ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().page(2).size(1).build();
+        void search_shouldReturnEmptyData_andValidMetadata_whenResultIsEmpty() {
+            ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().build();
 
-            givenSearchReturns(item1, item2);
-            assertThatThrownBy(() -> client.search("laptop", searchItem))
-                    .isInstanceOf(PageNotFoundException.class)
-                    .hasMessage("Page %d not found.".formatted(searchItem.getPage()));
+            givenSearchReturns();
+            SearchResponse<ElasticProductSearchItem> search = client.search("laptop", searchItem);
 
-            verify(operations).search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class));
-        }
-
-        @Test
-        void search_shouldReturnPageNotFound_whenEmptyResult() {
-            ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().page(1).size(1).build();
-
-            assertThatThrownBy(() -> givenSearchMetadata(searchItem))
-                    .hasMessage("Page %d not found.".formatted(searchItem.getPage()))
-                    .isInstanceOf(PageNotFoundException.class);
+            assertThat(search).isNotNull();
+            assertThat(search.data()).isNotNull();
+            assertThat(search.data()).hasSize(0);
+            assertThat(search.metadata()).isNotNull();
+            assertThat(search.metadata().page()).isEqualTo(DEFAULT_PAGE);
+            assertThat(search.metadata().size()).isEqualTo(DEFAULT_SIZE);
+            assertThat(search.metadata().totalElements()).isEqualTo(0);
+            assertThat(search.metadata().totalPages()).isEqualTo(0);
+            assertThat(search.metadata().hasNext()).isEqualTo(false);
+            assertThat(search.metadata().hasPrevious()).isEqualTo(false);
 
             verify(operations).search(any(org.springframework.data.elasticsearch.core.query.Query.class), eq(ElasticProductSearchItem.class));
         }
@@ -403,7 +398,7 @@ class ElasticProductSearchClientTest {
             client.search("laptop", null);
 
             Pageable pageable = captureQuery().getPageable();
-            assertThat(pageable.getPageNumber()).isEqualTo(DEFAULT_PAGE);
+            assertThat(pageable.getPageNumber()).isEqualTo(DEFAULT_PAGE - ProductSearchItem.FIRST_ELEMENT);
             assertThat(pageable.getPageSize()).isEqualTo(DEFAULT_SIZE);
         }
 
@@ -414,15 +409,15 @@ class ElasticProductSearchClientTest {
             client.search("laptop", ProductSearchItemDataBuilder.empty().build());
 
             Pageable pageable = captureQuery().getPageable();
-            assertThat(pageable.getPageNumber()).isEqualTo(DEFAULT_PAGE);
+            assertThat(pageable.getPageNumber()).isEqualTo(DEFAULT_PAGE - ProductSearchItem.FIRST_ELEMENT);
             assertThat(pageable.getPageSize()).isEqualTo(DEFAULT_SIZE);
         }
 
         @Test
-        void search_shouldUseProvidedPageAndSize() {
+        void search_shouldConvertPageToZeroAsFirstParameter_whenProvidedPageAndSize() {
             givenSearchReturns();
 
-            client.search("laptop", ProductSearchItemDataBuilder.empty().page(0).size(1).build());
+            client.search("laptop", ProductSearchItemDataBuilder.empty().page(1).size(1).build());
 
             Pageable pageable = captureQuery().getPageable();
             assertThat(pageable.getPageNumber()).isEqualTo(0);

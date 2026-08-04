@@ -138,9 +138,9 @@ class ProductSearchControllerIntegrationTest {
     }
 
     @Test
-    void search_shouldReturnBadRequest_whenPageIsNegativeAndSizeIsLessThanOne() throws Exception {
+    void search_shouldReturnBadRequest_whenPageIsLessThanOneAndSizeIsLessThanOne() throws Exception {
         ProductSearchRequest request = ProductSearchRequestDataBuilder.empty()
-                .page(-1)
+                .page(0)
                 .size(0)
                 .build();
 
@@ -154,7 +154,7 @@ class ProductSearchControllerIntegrationTest {
         assertThat(exceptionResponse.getMessage()).isEqualTo("Validation failed.");
         assertThat(exceptionResponse.getErrors()).isNotNull();
         assertThat(exceptionResponse.getErrors().size()).isEqualTo(2);
-        assertThat(exceptionResponse.getErrors().get("page")).isEqualTo("Page must not be less than zero.");
+        assertThat(exceptionResponse.getErrors().get("page")).isEqualTo("Page must not be less than one.");
         assertThat(exceptionResponse.getErrors().get("size")).isEqualTo("Page size must not be less than one.");
         assertThat(exceptionResponse.getPath()).isEqualTo("/search");
         assertThat(exceptionResponse.getCode()).isEqualTo(400);

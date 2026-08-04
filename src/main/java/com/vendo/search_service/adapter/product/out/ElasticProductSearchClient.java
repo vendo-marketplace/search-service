@@ -9,7 +9,6 @@ import com.vendo.search_service.adapter.search.SearchRepository;
 import com.vendo.search_service.adapter.search.dto.SearchResponse;
 import com.vendo.search_service.domain.product.exception.InternalSearchException;
 import com.vendo.search_service.domain.product.search.ProductSearchItem;
-import com.vendo.search_service.domain.product.search.exception.PageNotFoundException;
 import com.vendo.search_service.domain.product.search.sort.ProductSortField;
 import com.vendo.search_service.domain.product.search.sort.SortBody;
 import com.vendo.search_service.domain.search.SearchMetadata;
@@ -112,7 +111,8 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
     }
 
     private void withPage(NativeQueryBuilder queryBuilder, ProductSearchItem searchItem) {
-        PageRequest pageable = PageRequest.of(ProductSearchItem.getPage(DEFAULT_PAGE, searchItem), ProductSearchItem.getSize(DEFAULT_SIZE, searchItem));
+        int page = ProductSearchItem.getPage(DEFAULT_PAGE, searchItem, false);
+        PageRequest pageable = PageRequest.of(page, ProductSearchItem.getSize(DEFAULT_SIZE, searchItem));
         queryBuilder.withPageable(pageable);
     }
 
@@ -135,7 +135,6 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
             List<ElasticProductSearchItem> items = hits.stream().map(SearchHit::getContent).toList();
             SearchMetadata metadata = buildMetadata(hits.getTotalHits(), searchItem);
 
-            throwIfPageNotFound(metadata.page(), metadata.totalPages());
             return new SearchResponse<>(items, metadata);
         } catch (NoSuchIndexException e) {
             log.warn("Elasticsearch internal exception, returning empty list. Reason: ", e);
@@ -146,7 +145,7 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
     }
 
     private SearchMetadata buildMetadata(long totalItems, ProductSearchItem searchItem) {
-        int page = ProductSearchItem.getPage(DEFAULT_PAGE, searchItem);
+        int page = ProductSearchItem.getPage(DEFAULT_PAGE, searchItem, true);
         int size = ProductSearchItem.getSize(DEFAULT_SIZE, searchItem);
 
         return new SearchMetadata(
@@ -154,14 +153,8 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
                 size,
                 ProductSearchItem.getTotalPages(totalItems, size),
                 totalItems,
-                ProductSearchItem.getHasPrevious(page),
+                ProductSearchItem.getHasPrevious(page, size, totalItems),
                 ProductSearchItem.getHasNext(page, size, totalItems)
         );
-    }
-
-    private void throwIfPageNotFound(int page, long totalPages) {
-        if (page >= totalPages && page > ProductSearchItem.EMPTY) {
-            throw new PageNotFoundException("Page %d not found.".formatted(page));
-        }
     }
 }
