@@ -153,7 +153,7 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
                 size,
                 ProductSearchItem.getTotalPages(totalItems, size),
                 totalItems,
-                ProductSearchItem.getHasPrevious(page),
+                ProductSearchItem.getHasPrevious(page, size, totalItems),
                 ProductSearchItem.getHasNext(page, size, totalItems)
         );
     }

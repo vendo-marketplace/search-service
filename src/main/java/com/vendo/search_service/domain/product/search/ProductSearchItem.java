@@ -31,8 +31,8 @@ public class ProductSearchItem {
         return (totalItems + size - FIRST_ELEMENT) / size;
     }
 
-    public static boolean getHasPrevious(int page) {
-        return page > FIRST_ELEMENT;
+    public static boolean getHasPrevious(int page, int size, long totalItems) {
+        return page > FIRST_ELEMENT && page <= getTotalPages(totalItems, size);
     }
 
     public static boolean getHasNext(int page, int size, long totalItems) {
