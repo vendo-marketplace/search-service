@@ -169,6 +169,16 @@ java -jar target/product-service.jar
 
 ---
 
+# API Documentation
+
+Swagger UI:
+
+```
+http://194.163.130.14:8030/swagger-ui/index.html
+```
+
+---
+
 # Testing
 
 Run unit tests:
