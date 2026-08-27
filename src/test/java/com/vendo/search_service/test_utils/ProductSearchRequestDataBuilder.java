@@ -22,6 +22,7 @@ public class ProductSearchRequestDataBuilder {
     private Boolean active;
     private Boolean isNew;
     private SortBody sort;
+    private List<String> ids;
     private AddressFilterRequest addressFilter;
     private AttributeFilterRequest attributeFilter;
     private PriceRangeFilterRequest priceRangeFilter;
@@ -42,12 +43,13 @@ public class ProductSearchRequestDataBuilder {
                 .attributeFilter(new AttributeFilterRequest(List.of(
                         new AttributeRequest("color", List.of("red", "blue"))
                 )))
+                .ids(List.of("1", "2", "3"))
                 .priceRangeFilter(new PriceRangeFilterRequest(BigDecimal.TEN, BigDecimal.valueOf(100)))
                 .size(25)
                 .page(1);
     }
 
     public ProductSearchRequest build() {
-        return new ProductSearchRequest(categoryId, active, isNew, sort, addressFilter, attributeFilter, priceRangeFilter, size, page);
+        return new ProductSearchRequest(categoryId, active, isNew, sort, ids, addressFilter, attributeFilter, priceRangeFilter, size, page);
     }
 }

@@ -425,8 +425,6 @@ class ElasticProductSearchClientTest {
         }
     }
 
-
-
     @SuppressWarnings("unchecked")
     private void givenSearchReturns(ElasticProductSearchItem... items) {
         SearchHits<ElasticProductSearchItem> hits = mock(SearchHits.class);

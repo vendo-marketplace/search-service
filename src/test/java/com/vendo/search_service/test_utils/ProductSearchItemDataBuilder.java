@@ -21,6 +21,7 @@ public class ProductSearchItemDataBuilder {
     private Boolean active;
     private Boolean isNew;
     private SortBody sort;
+    private List<String> ids;
     private AddressFilter addressFilter;
     private AttributeFilter attributeFilter;
     private PriceRangeFilter priceRangeFilter;
@@ -41,12 +42,13 @@ public class ProductSearchItemDataBuilder {
                 .attributeFilter(new AttributeFilter(List.of(
                         new AttributeFilter.Attribute("color", List.of("red", "blue"))
                 )))
+                .ids(List.of("1", "2", "3"))
                 .priceRangeFilter(new PriceRangeFilter(BigDecimal.TEN, BigDecimal.valueOf(100)))
                 .size(25)
                 .page(1);
     }
 
     public ProductSearchItem build() {
-        return new ProductSearchItem(categoryId, active, isNew, sort, addressFilter, attributeFilter, priceRangeFilter, size, page);
+        return new ProductSearchItem(categoryId, active, isNew, sort, ids, addressFilter, attributeFilter, priceRangeFilter, size, page);
     }
 }
