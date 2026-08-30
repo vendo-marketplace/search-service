@@ -48,9 +48,9 @@ public class ElasticProductSearchItem {
         private Boolean active;
 
         @Field(
-                type = FieldType.Date,
-                format = {},
-                pattern = "uuuu-MM-dd'T'HH:mm:ss.SSSX"
+                type = FieldType.Date
+//                format = {},
+//                pattern = "uuuu-MM-dd'T'HH:mm:ss.SSSX"
         )
         private Instant createdAt;
 
