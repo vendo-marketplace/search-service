@@ -7,7 +7,10 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.List;
 
 @Setter
@@ -30,7 +33,7 @@ public class ProductDataBuilder {
     private Boolean isNew;
     private Boolean active;
 
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     public static ProductDataBuilder withAllFields() {
         return new ProductDataBuilder()
@@ -46,7 +49,7 @@ public class ProductDataBuilder {
                 .attributes(List.of(new Attribute("color", List.of("red", "blue"))))
                 .images(List.of("url1", "url2"))
                 .active(true)
-                .createdAt(LocalDateTime.of(2024, 1, 1, 0, 0));
+                .createdAt(Instant.now());
     }
 
     public Product build() {

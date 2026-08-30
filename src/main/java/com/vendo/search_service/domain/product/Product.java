@@ -3,7 +3,7 @@ package com.vendo.search_service.domain.product;
 import com.vendo.search_service.domain.product.nested.Address;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 public record Product(
@@ -23,7 +23,7 @@ public record Product(
         String ownerId,
         String categoryId,
 
-        LocalDateTime createdAt
+        Instant createdAt
         ) {
 
     public record Attribute(
