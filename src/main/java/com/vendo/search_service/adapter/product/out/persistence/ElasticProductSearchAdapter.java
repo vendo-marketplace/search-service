@@ -24,7 +24,9 @@ class ElasticProductSearchAdapter implements ProductSearchPort {
     @Override
     public ProductSearchData search(String q, ProductSearchItem searchItem) {
         SearchResponse<ElasticProductSearchItem> searchResponse = repository.search(q, searchItem);
+        System.out.println("raw: " + searchItem);
         List<Product> products = mapper.toProducts(searchResponse.data());
+        System.out.println("mapped: " + products);
         return new ProductSearchData(products, searchResponse.metadata());
     }
 }

@@ -24,6 +24,7 @@ class ProductSearchController {
             @Valid @RequestBody(required = false) ProductSearchRequest request
     ) {
         ProductSearchData data = productSearchUseCase.search(q, mapper.toSearchItem(request));
+        System.out.println("response: " + data.data());
         return ResponseEntity.ok(data);
     }
 

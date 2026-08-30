@@ -24,7 +24,7 @@ public record Product(
         String categoryId,
 
         Instant createdAt
-        ) {
+) {
 
     public record Attribute(
             String id,
