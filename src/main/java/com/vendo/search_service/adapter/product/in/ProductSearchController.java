@@ -23,8 +23,8 @@ class ProductSearchController {
             @RequestParam(required = false) String q,
             @Valid @RequestBody(required = false) ProductSearchRequest request
     ) {
-        System.out.println(request);
         ProductSearchData data = productSearchUseCase.search(q, mapper.toSearchItem(request));
+        System.out.println(data);
         return ResponseEntity.ok(data);
     }
 
