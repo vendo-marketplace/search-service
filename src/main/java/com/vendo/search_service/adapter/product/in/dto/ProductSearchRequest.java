@@ -4,6 +4,8 @@ import com.vendo.search_service.domain.product.search.sort.SortBody;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 
+import java.util.List;
+
 public record ProductSearchRequest(
         String categoryId,
 
@@ -11,6 +13,8 @@ public record ProductSearchRequest(
         Boolean isNew,
 
         SortBody sort,
+
+        List<String> ids,
 
         @Valid
         AddressFilterRequest addressFilter,

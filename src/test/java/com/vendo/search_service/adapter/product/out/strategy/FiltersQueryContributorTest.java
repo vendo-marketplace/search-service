@@ -26,6 +26,7 @@ public class FiltersQueryContributorTest {
     private final AttributesQueryContributor attributesQueryContributor = new AttributesQueryContributor();
     private final IsNewQueryContributor isNewQueryContributor = new IsNewQueryContributor();
     private final AddressQueryContributor addressQueryContributor = new AddressQueryContributor();
+    private final ProductIdsQueryContributor productIdsQueryContributor = new ProductIdsQueryContributor();
 
     @Test
     void search_shouldAddTermFilter_whenCategoryProvided() {
@@ -37,6 +38,20 @@ public class FiltersQueryContributorTest {
         assertThat(query.isTerm()).isTrue();
         assertThat(query.term().field()).isEqualTo(CATEGORY_ID);
         assertThat(query.term().value().stringValue()).isEqualTo(searchItem.getCategoryId());
+    }
+
+    @Test
+    void search_shouldAddTermsFilter_whenIds() {
+        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().ids(List.of("1", "2", "3")).build();
+
+        Query query = getSingleResult(productIdsQueryContributor, searchItem);
+
+        assertThat(query).isNotNull();
+        assertThat(query.isTerms()).isTrue();
+        assertThat(query.terms().field()).isEqualTo(ID);
+        assertThat(query.terms().terms().value())
+                .extracting(FieldValue::stringValue)
+                .containsExactlyElementsOf(searchItem.getIds());
     }
 
     @Test

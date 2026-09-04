@@ -7,6 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public final class ProductSearchFields {
 
+    public static final String ID = "_id";
     public static final String TITLE = "title";
     public static final String DESCRIPTION = "description";
     public static final String PRICE = "price";

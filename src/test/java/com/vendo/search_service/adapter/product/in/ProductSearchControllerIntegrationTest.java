@@ -130,7 +130,7 @@ class ProductSearchControllerIntegrationTest {
         assertThat(exceptionResponse.getMessage()).isEqualTo("Validation failed.");
         assertThat(exceptionResponse.getErrors()).isNotNull();
         assertThat(exceptionResponse.getErrors().size()).isEqualTo(1);
-        assertThat(exceptionResponse.getErrors().get("priceRangeFilter.minPrice")).isEqualTo("Minimal price must not be less than zero.");
+        assertThat(exceptionResponse.getErrors().get("priceRangeFilter.minPrice")).isEqualTo("Minimal price must not be less than 0.");
         assertThat(exceptionResponse.getPath()).isEqualTo("/search");
         assertThat(exceptionResponse.getCode()).isEqualTo(400);
 

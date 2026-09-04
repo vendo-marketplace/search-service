@@ -7,6 +7,8 @@ import com.vendo.search_service.domain.product.search.sort.SortBody;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 public class ProductSearchItem {
@@ -16,6 +18,8 @@ public class ProductSearchItem {
     private Boolean isNew;
 
     private SortBody sort;
+
+    private List<String> ids;
 
     private AddressFilter addressFilter;
     private AttributeFilter attributeFilter;

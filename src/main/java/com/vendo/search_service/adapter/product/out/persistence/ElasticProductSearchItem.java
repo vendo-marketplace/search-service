@@ -5,7 +5,6 @@ import com.vendo.search_service.adapter.product.out.persistence.nested.ElasticSe
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -48,7 +47,7 @@ public class ElasticProductSearchItem {
         @Field(type = FieldType.Boolean)
         private Boolean active;
 
-        @Field(type = FieldType.Date, format = DateFormat.date_time)
+        @Field(type = FieldType.Date)
         private Instant createdAt;
 
 }
