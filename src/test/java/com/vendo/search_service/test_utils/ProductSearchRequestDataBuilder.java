@@ -38,7 +38,7 @@ public class ProductSearchRequestDataBuilder {
                 .categoryId("category-1")
                 .active(true)
                 .isNew(true)
-                .addressFilter(new AddressFilterRequest("Lviv", "Lviv region"))
+                .addressFilter(new AddressFilterRequest("Lviv"))
                 .sort(new SortBody(ProductSortField.PRICE, SortDirection.ASC))
                 .attributeFilter(new AttributeFilterRequest(List.of(
                         new AttributeRequest("color", List.of("red", "blue"))
