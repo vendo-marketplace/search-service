@@ -94,15 +94,11 @@ public class FiltersQueryContributorTest {
     void search_shouldAddTermFilters_withCity_whenAddressProvided() {
         ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().addressFilter(new AddressFilter("Lviv")).build();
 
-        List<Query> queries = getMultipleResults(addressQueryContributor, searchItem);
+        Query query = getSingleResult(addressQueryContributor, searchItem);
 
-        assertThat(queries).isNotNull();
-        assertThat(queries).hasSize(2);
-
-        Query cityTermQuery = queries.get(0);
-        assertThat(cityTermQuery.isTerm()).isTrue();
-        assertThat(cityTermQuery.term().field()).isEqualTo(ADDRESS_CITY);
-        assertThat(cityTermQuery.term().value().stringValue()).isEqualTo(searchItem.getAddressFilter().city());
+        assertThat(query.isTerm()).isTrue();
+        assertThat(query.term().field()).isEqualTo(ADDRESS_CITY);
+        assertThat(query.term().value().stringValue()).isEqualTo(searchItem.getAddressFilter().city());
     }
 
     @Test
