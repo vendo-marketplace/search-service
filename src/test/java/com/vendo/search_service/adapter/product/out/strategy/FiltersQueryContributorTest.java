@@ -91,8 +91,8 @@ public class FiltersQueryContributorTest {
     }
 
     @Test
-    void search_shouldAddTermFilters_withCityAndRegion_whenAddressProvided() {
-        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().addressFilter(new AddressFilter("Lviv", "Lviv region")).build();
+    void search_shouldAddTermFilters_withCity_whenAddressProvided() {
+        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().addressFilter(new AddressFilter("Lviv")).build();
 
         List<Query> queries = getMultipleResults(addressQueryContributor, searchItem);
 
@@ -103,29 +103,11 @@ public class FiltersQueryContributorTest {
         assertThat(cityTermQuery.isTerm()).isTrue();
         assertThat(cityTermQuery.term().field()).isEqualTo(ADDRESS_CITY);
         assertThat(cityTermQuery.term().value().stringValue()).isEqualTo(searchItem.getAddressFilter().city());
-
-        Query regionTermQuery = queries.get(1);
-        assertThat(regionTermQuery.isTerm()).isTrue();
-        assertThat(regionTermQuery.term().field()).isEqualTo(ADDRESS_REGION);
-        assertThat(regionTermQuery.term().value().stringValue()).isEqualTo(searchItem.getAddressFilter().region());
-    }
-
-    @Test
-    void search_shouldAddTermFilter_withCity_butNoRegion() {
-        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().addressFilter(new AddressFilter("Lviv", null)).build();
-
-        Query query = getSingleResult(addressQueryContributor, searchItem);
-
-        assertThat(query).isNotNull();
-
-        assertThat(query.isTerm()).isTrue();
-        assertThat(query.term().field()).isEqualTo(ADDRESS_CITY);
-        assertThat(query.term().value().stringValue()).isEqualTo(searchItem.getAddressFilter().city());
     }
 
     @Test
     void search_shouldNotAddTermFilter_withRegion_butNoCity() {
-        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().addressFilter(new AddressFilter(null, "Lviv region")).build();
+        ProductSearchItem searchItem = ProductSearchItemDataBuilder.empty().addressFilter(new AddressFilter(null)).build();
         assertThat(isEmpty(addressQueryContributor, searchItem));
     }
 

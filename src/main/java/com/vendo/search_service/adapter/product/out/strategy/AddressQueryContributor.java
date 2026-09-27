@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 import static com.vendo.search_service.adapter.product.out.constants.ProductSearchFields.ADDRESS_CITY;
-import static com.vendo.search_service.adapter.product.out.constants.ProductSearchFields.ADDRESS_REGION;
 
 @Component
 class AddressQueryContributor implements QueryContributor {
@@ -28,12 +27,6 @@ class AddressQueryContributor implements QueryContributor {
         }
 
         Query cityQuery = TermQuery.of(b -> b.field(ADDRESS_CITY).value(filter.city()))._toQuery();
-        if (StringUtils.isEmpty(filter.region())) {
-            filters.add(cityQuery);
-            return;
-        }
-
-        Query regionQuery = TermQuery.of(b -> b.field(ADDRESS_REGION).value(filter.region()))._toQuery();
-        filters.addAll(List.of(cityQuery, regionQuery));
+        filters.add(cityQuery);
     }
 }

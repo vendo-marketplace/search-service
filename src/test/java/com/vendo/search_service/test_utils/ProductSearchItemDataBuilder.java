@@ -38,7 +38,7 @@ public class ProductSearchItemDataBuilder {
                 .active(true)
                 .isNew(true)
                 .sort(new SortBody(ProductSortField.PRICE, SortDirection.ASC))
-                .addressFilter(new AddressFilter("Lviv", "Lviv region"))
+                .addressFilter(new AddressFilter("Lviv"))
                 .attributeFilter(new AttributeFilter(List.of(
                         new AttributeFilter.Attribute("color", List.of("red", "blue"))
                 )))
