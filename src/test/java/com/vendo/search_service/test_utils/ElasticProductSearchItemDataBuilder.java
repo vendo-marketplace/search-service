@@ -42,7 +42,7 @@ public class ElasticProductSearchItemDataBuilder {
                 .isNew(true)
                 .price(BigDecimal.valueOf(1500))
                 .ownerId("owner-1")
-                .address(new ElasticAddress("Lviv region", "Lviv", new ElasticAddress.ElasticLocation(49.8397, 24.0297)))
+                .address(new ElasticAddress("Lviv"))
                 .categoryId("category-1")
                 .attributes(List.of(new ElasticSearchAttribute("id", List.of("red", "blue"))))
                 .images(List.of("url1", "url2"))

@@ -45,7 +45,7 @@ public class ProductDataBuilder {
                 .price(BigDecimal.valueOf(1500))
                 .ownerId("owner-1")
                 .categoryId("category-1")
-                .address(new Address("Lviv region", "Lviv", new Address.Location(49.8397, 24.0297)))
+                .address(new Address("Lviv"))
                 .attributes(List.of(new Attribute("color", List.of("red", "blue"))))
                 .images(List.of("url1", "url2"))
                 .active(true)
