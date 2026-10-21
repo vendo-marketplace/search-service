@@ -1,6 +1,7 @@
 package com.vendo.search_service.adapter.product.out;
 
 import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.vendo.core_lib.utils.StringUtils;
 import com.vendo.search_service.adapter.product.out.constants.ProductSearchFields;
@@ -80,6 +81,7 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
                                 .multiMatch(mm -> mm
                                         .query(q)
                                         .fields(ProductSearchFields.withPriority(TITLE, 3), DESCRIPTION)
+                                        .operator(Operator.And)
                                         .fuzziness(FUZZINESS_MODE)))));
 
         return Optional.of(query);

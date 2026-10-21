@@ -8,7 +8,8 @@ import lombok.Getter;
 public enum ProductSortField {
 
     CREATED_AT("createdAt"),
-    PRICE("price");
+    PRICE("price"),
+    RELEVANCE("_score");
 
     private final String field;
 
