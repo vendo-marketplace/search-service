@@ -349,10 +349,21 @@ class ElasticProductSearchClientTest {
         }
 
         @Test
-        void search_shouldDefaultToCreatedAtDesc_whenSearchItemIsNull() {
+        void search_shouldDefaultToRelevanceDesc_whenQueryPresentAndSearchItemIsNull() {
             givenSearchReturns();
 
-            client.search("laptop", null);
+            client.search("iphone 16 pro", null);
+
+            SortOptions sort = captureQuery().getSortOptions().get(0);
+            assertThat(sort.field().field()).isEqualTo("_score");
+            assertThat(sort.field().order()).isEqualTo(SortOrder.Desc);
+        }
+
+        @Test
+        void search_shouldDefaultToCreatedAtDesc_whenQueryIsEmptyAndSearchItemIsNull() {
+            givenSearchReturns();
+
+            client.search(null, null);
 
             SortOptions sort = captureQuery().getSortOptions().get(0);
             assertThat(sort.field().field()).isEqualTo("createdAt");
@@ -393,10 +404,21 @@ class ElasticProductSearchClientTest {
         }
 
         @Test
-        void search_shouldDefaultFieldToCreatedAt_whenSortByIsNull() {
+        void search_shouldDefaultFieldToRelevance_whenSortByIsNullAndQueryPresent() {
             givenSearchReturns();
 
             client.search("laptop", ProductSearchItemDataBuilder.empty().sort(new SortBody(null, SortDirection.ASC)).build());
+
+            SortOptions sort = captureQuery().getSortOptions().get(0);
+            assertThat(sort.field().field()).isEqualTo("_score");
+            assertThat(sort.field().order()).isEqualTo(SortOrder.Asc);
+        }
+
+        @Test
+        void search_shouldDefaultFieldToCreatedAt_whenSortByIsNullAndQueryIsEmpty() {
+            givenSearchReturns();
+
+            client.search("", ProductSearchItemDataBuilder.empty().sort(new SortBody(null, SortDirection.ASC)).build());
 
             SortOptions sort = captureQuery().getSortOptions().get(0);
             assertThat(sort.field().field()).isEqualTo("createdAt");

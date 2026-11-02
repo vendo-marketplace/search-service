@@ -58,7 +58,7 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
         textQuery(q).ifPresent(must::add);
         withFilters(searchItem, filters);
 
-        withSort(queryBuilder, searchItem);
+        withSort(queryBuilder, q, searchItem);
         withPage(queryBuilder, searchItem);
         withDefaults(queryBuilder, must, filters);
 
@@ -91,25 +91,29 @@ class ElasticProductSearchClient implements SearchRepository<ElasticProductSearc
         queryContributors.forEach(qc -> qc.contribute(searchItem, filters));
     }
 
-    private void withSort(NativeQueryBuilder queryBuilder, ProductSearchItem searchItem) {
-        SortOptions sortOptions = getSortOptions(searchItem);
+    private void withSort(NativeQueryBuilder queryBuilder, String q, ProductSearchItem searchItem) {
+        SortOptions sortOptions = getSortOptions(q, searchItem);
         queryBuilder.withSort(s -> s.field(f -> f.field(sortOptions.sortField()).order(sortOptions.order())));
     }
 
-    private SortOptions getSortOptions(ProductSearchItem searchItem) {
+    private SortOptions getSortOptions(String q, ProductSearchItem searchItem) {
         SortBody sort = searchItem != null
                 ? searchItem.getSort()
                 : null;
 
         ProductSortField sortField = sort != null && sort.sortBy() != null ?
                 sort.sortBy() :
-                ProductSortField.CREATED_AT;
+                defaultSortField(q);
 
         SortOrder order = sort != null && sort.direction() != null ?
                 SortOrder.valueOf(sort.direction().getDirection()) :
                 SortOrder.Desc;
 
         return new SortOptions(sortField.getField(), order);
+    }
+
+    private ProductSortField defaultSortField(String q) {
+        return StringUtils.isEmpty(q) ? ProductSortField.CREATED_AT : ProductSortField.RELEVANCE;
     }
 
     private void withPage(NativeQueryBuilder queryBuilder, ProductSearchItem searchItem) {
